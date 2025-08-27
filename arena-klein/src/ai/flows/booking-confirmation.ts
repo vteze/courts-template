@@ -42,7 +42,7 @@ const bookingConfirmationPrompt = ai.definePrompt({
   input: {schema: PersonalizedBookingConfirmationInputSchema},
   output: {schema: PersonalizedBookingConfirmationOutputSchema},
   prompt: `
-Você é um assistente da Arena Klein Beach Tennis.
+Você é um assistente da Fúria Treinamentos Futevôlei.
 Sua tarefa é gerar:
 1. Uma mensagem CURTA e AMIGÁVEL de confirmação de reserva para ser exibida em um toast.
 2. O ASSUNTO para um email de confirmação.
@@ -61,8 +61,8 @@ Se 'onBehalfOfName' existir: "Reserva para {{onBehalfOfName}} (feita por {{userN
 Senão: "Reserva confirmada, {{userName}}! Sua {{courtType}} para {{date}} às {{time}} está garantida."
 
 Para o ASSUNTO do email (emailSubject):
-Se 'onBehalfOfName' existir: "Confirmação da sua reserva (para {{onBehalfOfName}}) na Arena Klein Beach Tennis (ID: {{bookingId}})"
-Senão: "Confirmação da sua reserva na Arena Klein Beach Tennis (ID: {{bookingId}})"
+Se 'onBehalfOfName' existir: "Confirmação da sua reserva (para {{onBehalfOfName}}) na Fúria Treinamentos Futevôlei (ID: {{bookingId}})"
+Senão: "Confirmação da sua reserva na Fúria Treinamentos Futevôlei (ID: {{bookingId}})"
 
 Para o CORPO do email (emailBody):
 - Comece com uma saudação (Prezado(a) {{#if onBehalfOfName}}{{onBehalfOfName}}{{else}}{{userName}}{{/if}},).
@@ -70,7 +70,7 @@ Para o CORPO do email (emailBody):
 - Se 'onBehalfOfName' existir, adicione uma linha: "Esta reserva foi feita por {{userName}} em seu nome."
 - Inclua uma frase como "Estamos ansiosos para recebê-lo(a)!".
 - Adicione informações úteis, como "Chegue com 10 minutos de antecedência." e "Em caso de necessidade de cancelamento, acesse 'Minhas Reservas' em nosso site ou app (se a reserva foi feita por você) ou entre em contato com {{userName}} (se a reserva foi feita em seu nome).".
-- Termine com "Atenciosamente, Equipe Arena Klein Beach Tennis".
+- Termine com "Atenciosamente, Equipe Fúria Treinamentos Futevôlei".
 - Formate o corpo do email para ser legível (pode ser texto simples, com quebras de linha).
 
 IMPORTANTE: Sua resposta DEVE SER OBRIGATORIAMENTE um objeto JSON.
@@ -80,7 +80,7 @@ Os valores destas chaves devem ser as strings que você gerou.
 Exemplo da ESTRUTURA JSON DE SAÍDA OBRIGATÓRIA (adaptar o conteúdo real):
 {
   "confirmationMessage": "Reserva confirmada!",
-  "emailSubject": "Sua reserva na Arena Klein está confirmada!",
+  "emailSubject": "Sua reserva na Fúria Treinamentos está confirmada!",
   "emailBody": "Prezado(a) Cliente,\\n\\nSua reserva está confirmada..."
 }
 Certifique-se de que o conteúdo real seja adaptado aos detalhes fornecidos. Use \\n para quebras de linha no emailBody se estiver gerando texto simples.

@@ -1,7 +1,7 @@
 
 import type { Court, PlaySlotConfig } from '@/lib/types';
 
-export const APP_NAME = "Arena Klein Beach Tennis";
+export const APP_NAME = "Fúria Treinamentos Futevôlei";
 
 // adminUserUids array foi removido. A verificação de admin agora é feita via coleção 'admins' no Firestore.
 
@@ -12,15 +12,15 @@ export const courts: Court[] = [
     type: 'covered',
     imageUrl: 'https://static.wixstatic.com/media/7b7a56_9c7444619c90469cae2ec8e84b89ac98~mv2.jpg/v1/fit/w_1280,h_960,al_c,q_85/7b7a56_9c7444619c90469cae2ec8e84b89ac98~mv2.jpg',
     description: 'Jogue confortavelmente independentemente do clima em nossa quadra coberta premium.',
-    dataAiHint: 'beachtennis coberta',
+    dataAiHint: 'futevolei coberta',
   },
   {
     id: 'uncovered-court',
     name: 'Quadra Não-Coberta',
     type: 'uncovered',
-    imageUrl: 'https://manalinda.cdn.magazord.com.br/img/2024/02/blog/4491/beach-tennis.jpg',
+    imageUrl: 'https://placehold.co/600x400?text=Futevolei',
     description: 'Aproveite o sol e o ar fresco em nossa espaçosa quadra não-coberta.',
-    dataAiHint: 'beachtennis sol',
+    dataAiHint: 'futevolei sol',
   },
 ];
 

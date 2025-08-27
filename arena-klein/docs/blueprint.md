@@ -1,4 +1,4 @@
-# **App Name**: Arena Klein Beach Tennis
+# **App Name**: Fúria Treinamentos Futevôlei
 
 ## Core Features:
 
@@ -14,5 +14,5 @@
 - Background color: Very light blue (#F0F4F8), a desaturated tone of the primary, creating a clean and unobtrusive backdrop.
 - Accent color: Magenta (#E03E8D), mirroring the racket in the logo, used to highlight key interactive elements.
 - Use modern, clean, and legible fonts like 'Inter' or 'Poppins' for both web and mobile interfaces.
-- Incorporate beach-tennis themed icons
+- Incorporate futevôlei-themed icons
 - Adopt a mobile-first, responsive design approach

@@ -100,7 +100,7 @@ function PlayPage() {
         <div className="flex items-center justify-center gap-3 mb-4">
           <Swords className="h-12 w-12 text-primary" />
           <h1 className="text-4xl font-bold tracking-tight text-primary">
-            Entre no Jogo: Sessões "Play" na Arena Klein!
+            Entre no Jogo: Sessões "Play" na Fúria Treinamentos!
           </h1>
         </div>
         <p className="text-lg text-foreground/70 max-w-3xl mx-auto">

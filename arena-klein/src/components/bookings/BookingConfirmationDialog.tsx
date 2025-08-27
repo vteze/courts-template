@@ -97,8 +97,8 @@ export function BookingConfirmationDialog({
       };
       
       let finalAiConfirmationMessage = `Reserva para ${court.name} em ${format(selectedDate, 'dd/MM/yyyy')} às ${selectedTime} confirmada!`; // Fallback
-      let finalEmailSubject = `Confirmação da sua reserva na Arena Klein Beach Tennis (ID: ${actualBookingId})`;
-      let finalEmailBody = `Prezado(a) ${nameForEmailSalutation},\n\nSua reserva (ID: ${actualBookingId}) para a ${court.name} no dia ${format(selectedDate, 'dd/MM/yyyy')} às ${selectedTime} está confirmada.\n\nInformações importantes:\n- Chegue com 10 minutos de antecedência.\n- Em caso de necessidade de cancelamento, acesse 'Minhas Reservas' em nosso site/app ou entre em contato com ${isAdmin && onBehalfOfName.trim() ? currentUser.name : 'a recepção'}.\n\nEstamos ansiosos para recebê-lo(a)!\n\nAtenciosamente,\nEquipe Arena Klein Beach Tennis`;
+      let finalEmailSubject = `Confirmação da sua reserva na Fúria Treinamentos Futevôlei (ID: ${actualBookingId})`;
+      let finalEmailBody = `Prezado(a) ${nameForEmailSalutation},\n\nSua reserva (ID: ${actualBookingId}) para a ${court.name} no dia ${format(selectedDate, 'dd/MM/yyyy')} às ${selectedTime} está confirmada.\n\nInformações importantes:\n- Chegue com 10 minutos de antecedência.\n- Em caso de necessidade de cancelamento, acesse 'Minhas Reservas' em nosso site/app ou entre em contato com ${isAdmin && onBehalfOfName.trim() ? currentUser.name : 'a recepção'}.\n\nEstamos ansiosos para recebê-lo(a)!\n\nAtenciosamente,\nEquipe Fúria Treinamentos Futevôlei`;
 
       try {
         const aiResponse = await personalizedBookingConfirmation(aiInput);

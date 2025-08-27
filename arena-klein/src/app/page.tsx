@@ -27,10 +27,10 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-grid-slate-900/[0.04] bg-[bottom_1px_center] dark:bg-grid-slate-400/[0.05] dark:bg-bottom dark:border-b dark:border-slate-100/5"></div>
           <div className="relative px-4 sm:px-6 lg:px-8">
             <h1 className="text-4xl font-extrabold tracking-tight text-primary sm:text-5xl lg:text-6xl xl:text-7xl">
-              Arena Klein Beach Tennis
+              Fúria Treinamentos Futevôlei
             </h1>
             <p className="mt-6 max-w-2xl mx-auto text-lg text-foreground/80 sm:text-xl lg:text-2xl">
-              Seu paraíso particular para o beach tennis. Reserve sua quadra e venha se divertir!
+              Seu paraíso particular para o futevôlei. Reserve sua quadra e venha se divertir!
             </p>
             <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
               {isClient ? (

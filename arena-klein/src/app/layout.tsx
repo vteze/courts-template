@@ -9,8 +9,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { cn } from '@/lib/utils';
 
 export const metadata: Metadata = {
-  title: 'Arena Klein Beach Tennis',
-  description: 'Reserve sua quadra de beach tennis na Arena Klein.',
+  title: 'Fúria Treinamentos Futevôlei',
+  description: 'Reserve sua quadra de futevôlei na Fúria Treinamentos.',
   icons: {
     icon: '/icon.jpg',
     shortcut: '/icon.jpg',

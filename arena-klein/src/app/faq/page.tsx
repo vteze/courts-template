@@ -21,12 +21,12 @@ const faqData: FaqItem[] = [
       "Oferecemos raquetes e bolinhas na recepção. Você também é bem-vindo a trazer seu próprio equipamento, se preferir.",
   },
   {
-    question: "Qual tipo de calçado devo usar para jogar beach tennis?",
+    question: "Qual tipo de calçado devo usar para jogar futevôlei?",
     answer:
       "Recomendamos jogar descalço para melhor aderência e sensação na areia. Se preferir, meias específicas para esportes na areia (sand socks) são permitidas. Calçados fechados ou com solado rígido não são permitidos nas quadras para preservar a qualidade da areia e garantir a segurança.",
   },
   {
-    question: "Vocês oferecem aulas de beach tennis?",
+    question: "Vocês oferecem aulas de futevôlei?",
     answer:
       "Sim! Temos aulas para todos os níveis, desde iniciantes até jogadores avançados, com instrutores qualificados. Consulte nossa seção de aulas em breve ou entre em contato conosco para mais informações sobre horários, disponibilidade e pacotes.",
   },
@@ -48,7 +48,7 @@ const faqData: FaqItem[] = [
   {
     question: "Qual a diferença principal entre a quadra coberta e a não-coberta?",
     answer:
-      "A quadra coberta permite que você jogue confortavelmente independentemente das condições climáticas, como chuva ou sol intenso. A quadra não-coberta proporciona a experiência clássica do beach tennis ao ar livre. Ambas as quadras são mantidas com os mesmos padrões de qualidade da areia.",
+      "A quadra coberta permite que você jogue confortavelmente independentemente das condições climáticas, como chuva ou sol intenso. A quadra não-coberta proporciona a experiência clássica do futevôlei ao ar livre. Ambas as quadras são mantidas com os mesmos padrões de qualidade da areia.",
   },
   {
     question: "Como faço para reservar uma quadra?",
@@ -56,7 +56,7 @@ const faqData: FaqItem[] = [
       "Você pode reservar uma quadra diretamente através do nosso site ou aplicativo. Basta selecionar a quadra desejada, a data, o horário e seguir as instruções para confirmar sua reserva. É necessário estar logado para realizar uma reserva.",
   },
   {
-    question: "Onde fica a Arena Klein Beach Tennis?",
+    question: "Onde fica a Fúria Treinamentos Futevôlei?",
     icon: MapPin,
     answer: (
       <div className="space-y-4">
@@ -65,14 +65,14 @@ const faqData: FaqItem[] = [
         </p>
         <div className="overflow-hidden rounded-md border shadow-sm aspect-video w-full max-w-2xl mx-auto">
           <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d863.5067995687858!2d-51.2285289!3d-30.0548237!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95197900600c160f%3A0x514097a0fc2f141c!2sArena%20Klein%20Beach%20Tennis!5e0!3m2!1spt-BR!2sbr!4v1700000000000!5m2!1spt-BR!2sbr"
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d863.5067995687858!2d-51.2285289!3d-30.0548237!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95197900600c160f%3A0x514097a0fc2f141c!2sFuria%20Treinamentos!5e0!3m2!1spt-BR!2sbr!4v1700000000000!5m2!1spt-BR!2sbr"
             width="100%"
             height="100%" // Height will be controlled by aspect-video parent
             style={{ border: 0 }}
             allowFullScreen={true}
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
-            title="Mapa da Localização da Arena Klein Beach Tennis"
+            title="Mapa da Localização da Fúria Treinamentos Futevôlei"
           ></iframe>
         </div>
         <p className="text-sm text-muted-foreground">
@@ -94,7 +94,7 @@ export default function FaqPage() {
           </h1>
         </div>
         <p className="text-lg text-foreground/70">
-          Encontre respostas para as dúvidas mais comuns sobre a Arena Klein Beach Tennis.
+          Encontre respostas para as dúvidas mais comuns sobre a Fúria Treinamentos Futevôlei.
         </p>
       </div>
 
