@@ -32,7 +32,7 @@ export function AppHeader() {
 
   const navLinksBase = [
     { href: '/', label: 'Início', icon: HomeLucideIcon },
-    { href: '/play', label: 'Play!', icon: Swords },
+    // { href: '/play', label: 'Play!', icon: Swords }, // ocultado: inscrição acontece no cartão da quadra
     { href: '/faq', label: 'FAQ', icon: HelpCircle },
   ];
 
@@ -74,13 +74,7 @@ export function AppHeader() {
 
   let navLinksActual = [...navLinksBase];
   if (currentUser) {
-    const playIndex = navLinksActual.findIndex(link => link.href === '/play');
-    if (playIndex !== -1) {
-      navLinksActual.splice(playIndex + 1, 0, { href: '/my-bookings', label: 'Minhas Reservas', icon: ListChecks });
-    } else {
-      // Fallback if '/play' is not found, though it should be
-      navLinksActual.push({ href: '/my-bookings', label: 'Minhas Reservas', icon: ListChecks });
-    }
+    navLinksActual.push({ href: '/my-bookings', label: 'Minhas Reservas', icon: ListChecks });
   }
   if (isAdmin) { // Add Admin link if user is admin
     navLinksActual.push({ href: '/admin', label: 'Admin', icon: ShieldAlert });

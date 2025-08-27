@@ -1,4 +1,3 @@
-
 import type {Metadata} from 'next';
 import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
@@ -10,7 +9,7 @@ import { cn } from '@/lib/utils';
 
 export const metadata: Metadata = {
   title: 'Fúria Treinamentos Futevôlei',
-  description: 'Reserve sua quadra de futevôlei na Fúria Treinamentos.',
+  description: 'Inscreva-se nos horários de futevôlei da Refúgio Arena.',
   icons: {
     icon: '/icon.jpg',
     shortcut: '/icon.jpg',
@@ -32,7 +31,6 @@ export default function RootLayout({
             <main className="flex-1 container py-8">
               {children}
             </main>
-            {/* Optional Footer can be added here */}
           </div>
           <Toaster />
         </AuthProvider>
@@ -41,4 +39,3 @@ export default function RootLayout({
   );
 }
 
-    

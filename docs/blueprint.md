@@ -2,7 +2,7 @@
 
 ## Core Features:
 
-- Court Display: Display the two courts (covered and uncovered) with real-time availability.
+ - Court Display: Display the single court with real-time availability.
 - Availability Calendar: Allow users to select a date and view available time slots for each court, with booked slots clearly marked.
 - Booking System: Enable logged-in users to select an available time slot and book a court.
 - Booking Confirmation: Let the LLM be a tool used to respond in a personalized manner.

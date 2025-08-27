@@ -3,6 +3,8 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  // Quantidade de treinos permitidos por semana (1,2,3,5)
+  planPerWeek?: number;
 }
 
 export interface Court {
@@ -46,6 +48,7 @@ export interface PlaySignUp {
   userEmail: string;
   slotKey: string; // Corresponds to PlaySlotConfig.key
   date: string; // YYYY-MM-DD, specific date of the play session
+  time?: string; // HH:mm, opcional quando a inscrição é por horário
   signedUpAt: any; // Firestore Timestamp
 }
 
@@ -70,7 +73,8 @@ export interface AuthContextType {
   addBooking: (newBookingData: Omit<Booking, 'id' | 'userId' | 'userName' | 'onBehalfOf'>, onBehalfOfName?: string) => Promise<string>;
   cancelBooking: (bookingId: string) => Promise<void>;
   updateBookingByAdmin: (bookingId: string, newDate: string, newTime: string, newOnBehalfOfName?: string) => Promise<void>;
-  signUpForPlaySlot: (slotKey: string, date: string, userDetails: { userId: string, userName: string, userEmail: string }) => Promise<void>;
+  // Inscrição no Play; quando time é fornecido, a capacidade/único é por horário
+  signUpForPlaySlot: (slotKey: string, date: string, userDetails: { userId: string, userName: string, userEmail: string }, time?: string) => Promise<void>;
   cancelPlaySlotSignUp: (signUpId: string) => Promise<void>;
   isLoading: boolean;
   authError: string | null;

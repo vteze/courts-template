@@ -104,7 +104,7 @@ function PlayPage() {
           </h1>
         </div>
         <p className="text-lg text-foreground/70 max-w-3xl mx-auto">
-          Junte-se às nossas sessões "Play"! Horários fixos ({playSlotsConfig.map(s => s.label.split(' ')[1]).join('/')} das {playSlotsConfig[0].timeRange}), vagas limitadas ({maxParticipantsPerPlaySlot} por sessão), muita diversão e a chance de conhecer novos parceiros de jogo. As sessões "Play" utilizam ambas as quadras. Inscreva-se individualmente e garanta sua partida.
+          Junte-se às nossas sessões "Play"! Horários fixos diários (das {playSlotsConfig[0].timeRange}), vagas limitadas ({maxParticipantsPerPlaySlot} por sessão), muita diversão e a chance de conhecer novos parceiros de jogo. As sessões "Play" acontecem na nossa quadra da arena. Inscreva-se individualmente e garanta sua partida.
         </p>
       </header>
 
@@ -157,7 +157,7 @@ function PlayPage() {
            <div>
             <h3 className="font-semibold text-primary mb-1">Agenda e Horários Fixos</h3>
             <p>
-              As sessões "Play" acontecem em horários fixos: {playSlotsConfig.map(s => s.label.split(' ')[1].replace('!!','')).join(', ')}, das {playSlotsConfig[0].timeRange}. Veja as datas disponíveis acima e inscreva-se!
+              As sessões "Play" acontecem diariamente, das {playSlotsConfig[0].timeRange}. Veja as datas disponíveis acima e inscreva-se!
             </p>
           </div>
           <div>
@@ -169,13 +169,13 @@ function PlayPage() {
           <div>
             <h3 className="font-semibold text-primary mb-1">Formato da Sessão</h3>
             <p>
-              Durante as sessões "Play", que utilizam ambas as quadras da arena, os jogos são organizados de forma dinâmica, geralmente em formato de rodízio ou desafios. Isso garante que todos os participantes joguem bastante e interajam com diferentes parceiros e oponentes. O foco é a diversão, a prática esportiva e a socialização!
+              Durante as sessões "Play", realizadas na quadra da arena, os jogos são organizados de forma dinâmica, geralmente em formato de rodízio ou desafios. Isso garante que todos os participantes joguem bastante e interajam com diferentes parceiros e oponentes. O foco é a diversão, a prática esportiva e a socialização!
             </p>
           </div>
           <div>
             <h3 className="font-semibold text-primary mb-1">Exclusividade dos Horários</h3>
             <p>
-               Os horários dedicados às sessões "Play" ({playSlotsConfig.map(s => s.label.split(' ')[1].replace('!!','')).join(', ')}, das {playSlotsConfig[0].timeRange}) são exclusivos para esta modalidade. Durante esses períodos, ambas as quadras da arena são reservadas para o "Play" e não estarão disponíveis para aluguel avulso, garantindo o espaço para os participantes inscritos.
+               Os horários dedicados às sessões "Play" (das {playSlotsConfig[0].timeRange}) são exclusivos para esta modalidade. Durante esses períodos, a quadra da arena é reservada para o "Play" e não estará disponível para aluguel avulso, garantindo o espaço para os participantes inscritos.
             </p>
           </div>
         </CardContent>

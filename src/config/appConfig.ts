@@ -7,34 +7,30 @@ export const APP_NAME = "Fúria Treinamentos Futevôlei";
 
 export const courts: Court[] = [
   {
-    id: 'covered-court',
-    name: 'Quadra Coberta',
+    id: 'main-court',
+    name: 'Refúgio Arena — Quadra Principal',
     type: 'covered',
-    imageUrl: 'https://static.wixstatic.com/media/7b7a56_9c7444619c90469cae2ec8e84b89ac98~mv2.jpg/v1/fit/w_1280,h_960,al_c,q_85/7b7a56_9c7444619c90469cae2ec8e84b89ac98~mv2.jpg',
-    description: 'Jogue confortavelmente independentemente do clima em nossa quadra coberta premium.',
-    dataAiHint: 'futevolei coberta',
-  },
-  {
-    id: 'uncovered-court',
-    name: 'Quadra Não-Coberta',
-    type: 'uncovered',
-    imageUrl: 'https://placehold.co/600x400?text=Futevolei',
-    description: 'Aproveite o sol e o ar fresco em nossa espaçosa quadra não-coberta.',
-    dataAiHint: 'futevolei sol',
+    imageUrl: 'https://lh3.googleusercontent.com/p/AF1QipNY9b4RN45xrsy9_66ouZ3YziNstov9vo-1Tpoi=s680-w680-h510-rw',
+    description: 'Quadra oficial de futevôlei (8m x 16m) na Refúgio Arena, com areia tratada e estrutura confortável.',
+    dataAiHint: 'futevolei arena refugio',
   },
 ];
 
 export const availableTimeSlots: string[] = [
-  '07:00', '08:00',
-  '09:00', '10:00', '11:00', '12:00', '13:00', '14:00',
-  '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'
+  '17:00', '18:00', '19:00'
 ];
 
+// Dinâmica de "entrar no horário" (como o Play), agora diária nos horários 17–20
 export const playSlotsConfig: PlaySlotConfig[] = [
-  { key: "sexta-16-20", label: "Play SEXTOU!!", dayOfWeek: 5, timeRange: "16:00 - 20:00" },
-  { key: "sabado-16-20", label: "Play SABADOU!!", dayOfWeek: 6, timeRange: "16:00 - 20:00" },
-  { key: "domingo-16-20", label: "Play DOMINGOU!!", dayOfWeek: 0, timeRange: "16:00 - 20:00" },
+  { key: "domingo-17-20", label: "Play DIÁRIO!!", dayOfWeek: 0, timeRange: "17:00 - 20:00" },
+  { key: "segunda-17-20", label: "Play DIÁRIO!!", dayOfWeek: 1, timeRange: "17:00 - 20:00" },
+  { key: "terca-17-20",   label: "Play DIÁRIO!!", dayOfWeek: 2, timeRange: "17:00 - 20:00" },
+  { key: "quarta-17-20",  label: "Play DIÁRIO!!", dayOfWeek: 3, timeRange: "17:00 - 20:00" },
+  { key: "quinta-17-20",  label: "Play DIÁRIO!!", dayOfWeek: 4, timeRange: "17:00 - 20:00" },
+  { key: "sexta-17-20",   label: "Play DIÁRIO!!", dayOfWeek: 5, timeRange: "17:00 - 20:00" },
+  { key: "sabado-17-20",  label: "Play DIÁRIO!!", dayOfWeek: 6, timeRange: "17:00 - 20:00" },
 ];
 
-export const maxParticipantsPerPlaySlot = 20;
 export const numberOfWeeksToDisplayPlaySlots = 4;
+// Capacidade atual por horário de Play
+export const maxParticipantsPerPlaySlot = 12;

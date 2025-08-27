@@ -28,6 +28,12 @@ const nextConfig: NextConfig = {
         hostname: 'static.wixstatic.com',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+        port: '',
+        pathname: '/**',
       }
       // Removed instagram.fpoa33-1.fna.fbcdn.net as it's not reliable for direct embedding due to CORS
     ],

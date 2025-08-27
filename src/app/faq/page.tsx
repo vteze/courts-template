@@ -16,9 +16,9 @@ interface FaqItem {
 
 const faqData: FaqItem[] = [
   {
-    question: "Preciso levar minha própria raquete e bolinhas?",
+    question: "Preciso levar minha própria bola de futevôlei?",
     answer:
-      "Oferecemos raquetes e bolinhas na recepção. Você também é bem-vindo a trazer seu próprio equipamento, se preferir.",
+      "Temos bolas de futevôlei disponíveis na recepção para empréstimo durante o uso da quadra. Se preferir, você pode trazer a sua própria bola.",
   },
   {
     question: "Qual tipo de calçado devo usar para jogar futevôlei?",
@@ -46,9 +46,9 @@ const faqData: FaqItem[] = [
       "A arena não possui estacionamento próprio. No entanto, é geralmente possível estacionar na Rua Comendador Rodolfo Gomes, bem em frente à arena. Recomendamos sempre observar a sinalização local de trânsito e restrições de estacionamento.",
   },
   {
-    question: "Qual a diferença principal entre a quadra coberta e a não-coberta?",
+    question: "Como funcionam as inscrições por horário?",
     answer:
-      "A quadra coberta permite que você jogue confortavelmente independentemente das condições climáticas, como chuva ou sol intenso. A quadra não-coberta proporciona a experiência clássica do futevôlei ao ar livre. Ambas as quadras são mantidas com os mesmos padrões de qualidade da areia.",
+      "Após fazer login, escolha a data e o horário desejado (17:00, 18:00 ou 19:00) diretamente no cartão da quadra e clique em 'Entrar'. Cada horário possui vagas limitadas (12). Se mudar de ideia, clique em 'Sair' para cancelar sua inscrição.",
   },
   {
     question: "Como faço para reservar uma quadra?",
@@ -61,18 +61,18 @@ const faqData: FaqItem[] = [
     answer: (
       <div className="space-y-4">
         <p>
-          Estamos localizados na Rua Comendador Rodolfo Gomes, no bairro Menino Deus, em Porto Alegre - RS.
+          Atendemos na Refúgio Arena: Av. Edgar Píres de Castro, 986 - Hípica, Porto Alegre - RS, 91788-000.
         </p>
         <div className="overflow-hidden rounded-md border shadow-sm aspect-video w-full max-w-2xl mx-auto">
           <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d863.5067995687858!2d-51.2285289!3d-30.0548237!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95197900600c160f%3A0x514097a0fc2f141c!2sFuria%20Treinamentos!5e0!3m2!1spt-BR!2sbr!4v1700000000000!5m2!1spt-BR!2sbr"
+            src="https://www.google.com/maps?q=Ref%C3%BAgio%20Arena%2C%20Av.%20Edgar%20P%C3%ADres%20de%20Castro%2C%20986%20-%20H%C3%ADpica%2C%20Porto%20Alegre%20-%20RS%2C%2091788-000&output=embed"
             width="100%"
-            height="100%" // Height will be controlled by aspect-video parent
+            height="100%"
             style={{ border: 0 }}
             allowFullScreen={true}
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
-            title="Mapa da Localização da Fúria Treinamentos Futevôlei"
+            title="Mapa da Localização da Refúgio Arena"
           ></iframe>
         </div>
         <p className="text-sm text-muted-foreground">

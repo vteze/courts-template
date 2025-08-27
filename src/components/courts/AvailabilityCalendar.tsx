@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -7,13 +6,14 @@ import { ptBR } from 'date-fns/locale';
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { Court, TimeSlot, PlaySlotConfig } from '@/lib/types';
+import type { Court, TimeSlot, PlaySlotConfig, PlaySignUp } from '@/lib/types';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
-import { availableTimeSlots, playSlotsConfig } from '@/config/appConfig';
+import { availableTimeSlots, playSlotsConfig, maxParticipantsPerPlaySlot } from '@/config/appConfig';
 import { BookingConfirmationDialog } from '@/components/bookings/BookingConfirmationDialog';
 import { AlertCircle, Swords } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { toast } from "@/hooks/use-toast";
 
@@ -60,8 +60,15 @@ export function AvailabilityCalendar({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
   
-  const { currentUser, bookings, isLoading: authIsLoading } = useAuth();
+  const { currentUser, bookings, playSignUps, isLoading: authIsLoading, signUpForPlaySlot, cancelPlaySlotSignUp } = useAuth();
   const router = useRouter();
+
+  const getInitials = (name: string = "") => {
+    const parts = name.split(' ').filter(Boolean);
+    if (parts.length === 0) return '';
+    if (parts.length === 1) return parts[0].slice(0,2).toUpperCase();
+    return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
+  };
 
   useEffect(() => {
     if (currentSelectedDate && !authIsLoading) {
@@ -87,18 +94,39 @@ export function AvailabilityCalendar({
     }
   }, [currentSelectedDate, court.id, bookings, authIsLoading]);
 
-  const handleTimeSlotClick = (time: string) => {
+  const handleTimeSlotClick = async (time: string, isPlay: boolean = false) => {
     if (!currentUser) {
       router.push('/login');
       return;
     }
     if (!currentSelectedDate) {
-        toast({
-            title: "Erro",
-            description: "Por favor, selecione uma data primeiro.",
-            variant: "destructive"
-        })
+      toast({ title: "Erro", description: "Por favor, selecione uma data primeiro.", variant: "destructive" });
+      return;
+    }
+    if (isPlay) {
+      const formattedSelectedDate = format(currentSelectedDate, 'yyyy-MM-dd');
+      const dayOfWeek = currentSelectedDate.getDay();
+      const slotConfig = playSlotsConfig.find(s => s.dayOfWeek === dayOfWeek);
+      if (!slotConfig) {
+        toast({ variant: 'destructive', title: 'Configuração ausente', description: 'Nenhuma configuração de horários para este dia.' });
         return;
+      }
+      const relevantForHour = playSignUps.filter(s => s.slotKey === slotConfig.key && s.date === formattedSelectedDate && s.time === time);
+      const me = relevantForHour.find(s => s.userId === currentUser.id);
+      const isFull = relevantForHour.length >= maxParticipantsPerPlaySlot;
+      try {
+        if (me) {
+          await cancelPlaySlotSignUp(me.id);
+          toast({ title: 'Inscrição removida', description: `Você saiu do horário ${time}.` });
+        } else if (!isFull) {
+          await signUpForPlaySlot(slotConfig.key, formattedSelectedDate, { userId: currentUser.id, userName: currentUser.name, userEmail: currentUser.email }, time);
+        } else {
+          toast({ variant: 'destructive', title: 'Vagas esgotadas', description: `Não há vagas para ${time}.` });
+        }
+      } catch (e: any) {
+        console.error(e);
+      }
+      return;
     }
     setSelectedTimeSlot(time);
     setIsDialogOpen(true);
@@ -141,18 +169,33 @@ export function AvailabilityCalendar({
                     {timeSlots.map(slot => {
                       let buttonVariant: "destructive" | "outline" | "default" = "outline";
                       let buttonText = slot.time;
-                      let IconComponent = null;
+                      let IconComponent: any = null;
                       let isDisabled = false;
-                      let onClickAction = () => handleTimeSlotClick(slot.time);
+                      let onClickAction = () => handleTimeSlotClick(slot.time, !!slot.isPlayTime);
                       let ariaLabel = `Reservar ${slot.time}`;
 
                       if (slot.isPlayTime) {
-                        buttonVariant = "default"; // Use primary color for Play indication
-                        buttonText = "Play!";
+                        const formattedSelectedDate = currentSelectedDate ? format(currentSelectedDate, 'yyyy-MM-dd') : '';
+                        const dow = currentSelectedDate ? currentSelectedDate.getDay() : -1;
+                        const cfg = playSlotsConfig.find(s => s.dayOfWeek === dow);
+                        const relevantForHour: PlaySignUp[] = (cfg && currentSelectedDate)
+                          ? playSignUps.filter(s => s.slotKey === cfg.key && s.date === formattedSelectedDate && s.time === slot.time)
+                          : [];
+                        const count = relevantForHour.length;
+                        const me = relevantForHour.find(s => s.userId === currentUser?.id);
+
+                        buttonVariant = me ? "destructive" : "default";
+                        buttonText = me ? `Sair (${count}/${maxParticipantsPerPlaySlot})` : `Entrar (${count}/${maxParticipantsPerPlaySlot})`;
                         IconComponent = Swords;
-                        isDisabled = false; // Play slots are clickable
-                        onClickAction = () => router.push('/play');
-                        ariaLabel = `Ir para a página de Play (horário ${slot.time})`;
+                        isDisabled = false;
+                        onClickAction = () => handleTimeSlotClick(slot.time, true);
+                        ariaLabel = me ? `Sair do horário ${slot.time}` : `Entrar no horário ${slot.time}`;
+                        if (!me && count >= maxParticipantsPerPlaySlot) {
+                          buttonVariant = "destructive";
+                          isDisabled = true;
+                          buttonText = `Esgotado (${count}/${maxParticipantsPerPlaySlot})`;
+                          ariaLabel = `Horário ${slot.time} sem vagas`;
+                        }
                       } else if (slot.isBooked) {
                         buttonVariant = "destructive";
                         isDisabled = true;
@@ -204,6 +247,43 @@ export function AvailabilityCalendar({
           selectedTime={selectedTimeSlot}
         />
       )}
+      {currentSelectedDate && (
+        <div className="px-6 pb-6">
+          <h4 className="text-md font-semibold mb-2">Inscritos por horário</h4>
+          <div className="space-y-3">
+            {availableTimeSlots.map(t => {
+              const dayOfWeek = currentSelectedDate.getDay();
+              const cfg = playSlotsConfig.find(s => s.dayOfWeek === dayOfWeek);
+              const dateStr = format(currentSelectedDate, 'yyyy-MM-dd');
+              const list = cfg ? playSignUps.filter(su => su.slotKey === cfg.key && su.date === dateStr && su.time === t) : [];
+              return (
+                <div key={t} className="border rounded-md p-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium">{t}</span>
+                    <span className="text-sm text-muted-foreground">{list.length}/{maxParticipantsPerPlaySlot}</span>
+                  </div>
+                  {list.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {list.map(su => (
+                        <div key={su.id} className="flex items-center gap-2 rounded bg-muted px-2 py-1">
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage src={`https://placehold.co/40x40.png?text=${getInitials(su.userName)}`} alt={su.userName} />
+                            <AvatarFallback>{getInitials(su.userName)}</AvatarFallback>
+                          </Avatar>
+                          <span className="text-sm">{su.userName}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Sem inscritos ainda.</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </Card>
   );
 }
+

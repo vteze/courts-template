@@ -2,6 +2,7 @@
 "use client";
 
 import type { User, Booking, PlaySignUp, AuthContextType, AuthProviderProps } from '@/lib/types';
+import { parseISO, startOfWeek, endOfWeek } from 'date-fns';
 import { useRouter, usePathname } from 'next/navigation';
 import { createContext, useState, useEffect, useCallback } from 'react';
 import { 
@@ -68,6 +69,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           id: firebaseUser.uid,
           email: firebaseUser.email || "",
           name: userName,
+          planPerWeek: (userDocSnap.exists() ? (userDocSnap.data()?.planPerWeek as number | undefined) : undefined) ?? 1,
         };
         setCurrentUser(user);
 
@@ -427,7 +429,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
 
-  const signUpForPlaySlot = async (slotKey: string, date: string, userDetails: { userId: string, userName: string, userEmail: string }) => {
+  const signUpForPlaySlot = async (slotKey: string, date: string, userDetails: { userId: string, userName: string, userEmail: string }, time?: string) => {
     if (!currentUser || currentUser.id !== userDetails.userId) {
       toast({ variant: "destructive", title: "Não Autenticado", description: "Ação não permitida ou dados do usuário inconsistentes." });
       router.push('/login');
@@ -435,23 +437,59 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     try {
-      const signUpsQuery = query(
-        collection(db, PLAY_SIGNUPS_COLLECTION_NAME),
-        where("slotKey", "==", slotKey),
-        where("date", "==", date),
-        where("userId", "==", currentUser.id)
-      );
+      // Limite semanal por plano
+      const planLimit = currentUser.planPerWeek ?? 1;
+      const targetDate = parseISO(date);
+      const weekStart = startOfWeek(targetDate, { weekStartsOn: 1 });
+      const weekEnd = endOfWeek(targetDate, { weekStartsOn: 1 });
+      const mySignUpsThisWeek = playSignUps.filter(su => {
+        if (su.userId !== currentUser.id) return false;
+        const suDate = parseISO(su.date);
+        return suDate >= weekStart && suDate <= weekEnd;
+      }).length;
+      if (mySignUpsThisWeek >= planLimit) {
+        toast({ variant: 'destructive', title: 'Limite semanal atingido', description: `Seu plano permite ${planLimit} treino(s) por semana.` });
+        return Promise.reject(new Error('Limite semanal atingido'));
+      }
+
+      let signUpsQuery;
+      if (time) {
+        signUpsQuery = query(
+          collection(db, PLAY_SIGNUPS_COLLECTION_NAME),
+          where("slotKey", "==", slotKey),
+          where("date", "==", date),
+          where("time", "==", time),
+          where("userId", "==", currentUser.id)
+        );
+      } else {
+        signUpsQuery = query(
+          collection(db, PLAY_SIGNUPS_COLLECTION_NAME),
+          where("slotKey", "==", slotKey),
+          where("date", "==", date),
+          where("userId", "==", currentUser.id)
+        );
+      }
       const existingSignUpSnapshot = await getDocs(signUpsQuery);
       if (!existingSignUpSnapshot.empty) {
         toast({ variant: "default", title: "Já Inscrito", description: "Você já está inscrito para este horário do Play." });
         return;
       }
 
-      const allSignUpsForSlotQuery = query(
-        collection(db, PLAY_SIGNUPS_COLLECTION_NAME),
-        where("slotKey", "==", slotKey),
-        where("date", "==", date)
-      );
+      let allSignUpsForSlotQuery;
+      if (time) {
+        allSignUpsForSlotQuery = query(
+          collection(db, PLAY_SIGNUPS_COLLECTION_NAME),
+          where("slotKey", "==", slotKey),
+          where("date", "==", date),
+          where("time", "==", time)
+        );
+      } else {
+        allSignUpsForSlotQuery = query(
+          collection(db, PLAY_SIGNUPS_COLLECTION_NAME),
+          where("slotKey", "==", slotKey),
+          where("date", "==", date)
+        );
+      }
       const allSignUpsSnapshot = await getDocs(allSignUpsForSlotQuery);
       if (allSignUpsSnapshot.size >= maxParticipantsPerPlaySlot) {
         toast({ variant: "destructive", title: "Vagas Esgotadas", description: "Este horário do Play já atingiu o número máximo de participantes." });
@@ -464,6 +502,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         userEmail: userDetails.userEmail,
         slotKey: slotKey,
         date: date,
+        ...(time ? { time } : {}),
         signedUpAt: Timestamp.now(),
       };
       await addDoc(collection(db, PLAY_SIGNUPS_COLLECTION_NAME), newSignUpData);

@@ -30,7 +30,7 @@ export default function HomePage() {
               Fúria Treinamentos Futevôlei
             </h1>
             <p className="mt-6 max-w-2xl mx-auto text-lg text-foreground/80 sm:text-xl lg:text-2xl">
-              Seu paraíso particular para o futevôlei. Reserve sua quadra e venha se divertir!
+              Escolha o horário e inscreva-se diretamente na quadra. Simples, rápido e com vagas limitadas por horário.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
               {isClient ? (
@@ -38,7 +38,7 @@ export default function HomePage() {
                   <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground shadow-md hover:shadow-lg transition-shadow">
                     <Link href="#courts-section">
                       <CalendarDays />
-                      Ver Quadras
+                      Ver Horários
                     </Link>
                   </Button>
                   <Button asChild size="lg" variant="outline" className="shadow-md hover:shadow-lg transition-shadow">
@@ -62,10 +62,10 @@ export default function HomePage() {
         <section id="courts-section" className="space-y-10">
           <div className="text-center mb-10 sm:mb-12"> {/* Adjusted spacing */}
             <h2 className="text-3xl font-bold tracking-tight text-primary sm:text-4xl">
-              Nossas Quadras
+              Nossa Quadra
             </h2>
             <p className="mt-3 text-lg text-foreground/70">
-              Escolha a quadra ideal para o seu jogo.
+              Confira os horários e garanta sua vaga.
             </p>
           </div>
           {courts.map((court, index) => {
