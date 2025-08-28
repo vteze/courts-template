@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ListChecks, CalendarClock, Users, BookOpen, CalendarDays } from "lucide-react";
 import Link from "next/link";
-import { playSlotsConfig, numberOfWeeksToDisplayPlaySlots, maxParticipantsPerPlaySlot, type PlaySlotConfig } from '@/config/appConfig';
+import { playSlotsConfig, numberOfWeeksToDisplayPlaySlots, maxParticipantsPerPlaySlot } from '@/config/appConfig';
+import type { PlaySlotConfig } from '@/lib/types';
 import { AulaSlotDisplay } from '@/components/aulas/AulaSlotDisplay';
 import { useAuth } from '@/hooks/useAuth';
 import { format, parseISO, startOfDay, addDays, getDay, nextDay as dateFnsNextDay } from 'date-fns';
@@ -49,7 +50,7 @@ const getNextOccurrences = (targetDayOfWeek: number, count: number): Array<{ dat
 
 
 function AulasPage() {
-  const { playSignUps, isLoading: authLoading } = useAuth();
+  const { playSignUps, currentUser, isLoading: authLoading } = useAuth();
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -93,6 +94,39 @@ function AulasPage() {
 
   }, [playSignUps]); // Recalcula se playSignUps mudar (indicando potencial mudança de estado ou re-render)
 
+  const myUpcomingSlots = useMemo(() => {
+    if (!currentUser) return [] as AulaSlotInstance[];
+    const now = new Date();
+    const mySlots: AulaSlotInstance[] = [];
+
+    playSignUps
+      .filter(signUp => signUp.userId === currentUser.id)
+      .forEach(signUp => {
+        const slot = playSlotsConfig.find(s => s.key === signUp.slotKey);
+        if (!slot) return;
+        const startTime = slot.timeRange.split(' - ')[0];
+        const playSessionStartDateTime = new Date(`${signUp.date}T${startTime}:00`);
+        if (now < playSessionStartDateTime) {
+          mySlots.push({
+            slotConfig: slot,
+            date: signUp.date,
+            displayDate: format(parseISO(signUp.date), 'dd/MM', { locale: ptBR }),
+            uniqueKey: `${slot.key}-${signUp.date}`,
+          });
+        }
+      });
+
+    mySlots.sort((a, b) => {
+      const startTimeA = a.slotConfig.timeRange.split(' - ')[0];
+      const startTimeB = b.slotConfig.timeRange.split(' - ')[0];
+      const dateTimeA = new Date(`${a.date}T${startTimeA}:00`);
+      const dateTimeB = new Date(`${b.date}T${startTimeB}:00`);
+      return dateTimeA.getTime() - dateTimeB.getTime();
+    });
+
+    return mySlots;
+  }, [playSignUps, currentUser]);
+
 
   return (
     <div className="w-full max-w-5xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-12">
@@ -104,9 +138,46 @@ function AulasPage() {
           </h1>
         </div>
         <p className="text-lg text-foreground/70 max-w-3xl mx-auto">
-          Nossas aulas acontecem diariamente (das {playSlotsConfig[0].timeRange}) com vagas limitadas ({maxParticipantsPerPlaySlot} por horário). Garanta sua presença e evolua no futevôlei com a gente.
+          Nossas aulas acontecem diariamente em três horários: 17:00 às 18:00, 18:00 às 19:00 e 19:00 às 20:00, com vagas limitadas ({maxParticipantsPerPlaySlot} por horário). Garanta sua presença e evolua no futevôlei com a gente.
         </p>
       </header>
+      {currentUser && (
+      <section id="my-aulas" className="space-y-8 scroll-mt-20">
+        <h2 className="text-3xl font-semibold text-primary text-center mb-8 flex items-center justify-center gap-2">
+          <ListChecks className="mr-2 h-8 w-8" /> Minhas Aulas
+        </h2>
+
+        {authLoading && (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1,2,3].map(i => <Skeleton key={i} className="h-60 w-full rounded-lg" />)}
+          </div>
+        )}
+
+        {!authLoading && myUpcomingSlots.length > 0 && (
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            {myUpcomingSlots.map(slotInstance => (
+              <AulaSlotDisplay
+                key={slotInstance.uniqueKey}
+                slotConfig={slotInstance.slotConfig}
+                date={slotInstance.date}
+                displayDate={slotInstance.displayDate}
+                allSignUps={playSignUps}
+              />
+            ))}
+          </div>
+        )}
+
+        {!authLoading && myUpcomingSlots.length === 0 && (
+          <Card className="text-center py-10">
+            <CardContent>
+              <CalendarClock className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-xl font-medium text-muted-foreground">Você não tem aulas agendadas.</p>
+              <p className="text-muted-foreground mt-2">Confira os horários disponíveis abaixo.</p>
+            </CardContent>
+          </Card>
+        )}
+      </section>
+      )}
 
       <section id="upcoming-aulas" className="space-y-8 scroll-mt-20">
         <h2 className="text-3xl font-semibold text-primary text-center mb-8 flex items-center justify-center gap-2">
@@ -157,7 +228,7 @@ function AulasPage() {
            <div>
             <h3 className="font-semibold text-primary mb-1">Agenda e Horários Fixos</h3>
             <p>
-              As aulas acontecem diariamente, das {playSlotsConfig[0].timeRange}. Veja as datas disponíveis acima e inscreva-se!
+              As aulas acontecem diariamente das 17:00 às 20:00, divididas em três horários de uma hora. Veja as datas disponíveis acima e inscreva-se!
             </p>
           </div>
           <div>
@@ -175,7 +246,7 @@ function AulasPage() {
           <div>
             <h3 className="font-semibold text-primary mb-1">Exclusividade dos Horários</h3>
             <p>
-               Os horários das aulas (das {playSlotsConfig[0].timeRange}) são exclusivos para esta modalidade. Durante esses períodos, a quadra da arena é reservada para as aulas e não estará disponível para aluguel avulso, garantindo o espaço para os participantes inscritos.
+               Os horários das aulas (17:00 às 20:00) são exclusivos para esta modalidade. Durante esses períodos, a quadra da arena é reservada para as aulas e não estará disponível para aluguel avulso, garantindo o espaço para os participantes inscritos.
             </p>
           </div>
         </CardContent>

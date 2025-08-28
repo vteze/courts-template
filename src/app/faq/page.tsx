@@ -33,7 +33,7 @@ const faqData: FaqItem[] = [
   {
     question: "Como funciona o cancelamento de reservas de quadra?",
     answer:
-      "Você pode cancelar suas reservas diretamente através da seção 'Minhas Reservas' em nosso site ou aplicativo. Pedimos que os cancelamentos sejam feitos com pelo menos 24 horas de antecedência para evitar taxas. Consulte nossa política completa de cancelamento para mais detalhes.",
+      "Você pode cancelar suas reservas entrando em contato conosco. Pedimos que os cancelamentos sejam feitos com pelo menos 24 horas de antecedência para evitar taxas. Consulte nossa política completa de cancelamento para mais detalhes.",
   },
   {
     question: "Posso levar comida e bebida para a arena?",

@@ -10,6 +10,7 @@ import { Users, UserPlus, UserMinus, Loader2, Trash2 } from 'lucide-react'; // A
 import { maxParticipantsPerPlaySlot } from '@/config/appConfig';
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,6 +35,7 @@ export function AulaSlotDisplay({ slotConfig, date, displayDate, allSignUps }: A
   const { currentUser, isAdmin, signUpForPlaySlot, cancelPlaySlotSignUp, isLoading: authLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [signUpToRemove, setSignUpToRemove] = useState<PlaySignUp | null>(null);
+  const router = useRouter();
 
 
   const relevantSignUps = allSignUps.filter(
@@ -48,15 +50,21 @@ export function AulaSlotDisplay({ slotConfig, date, displayDate, allSignUps }: A
 
   const handleSignUp = async () => {
     if (!currentUser) {
+      router.push('/login');
       return;
     }
     setIsSubmitting(true);
     try {
-      await signUpForPlaySlot(slotConfig.key, date, {
-        userId: currentUser.id,
-        userName: currentUser.name,
-        userEmail: currentUser.email,
-      });
+      await signUpForPlaySlot(
+        slotConfig.key,
+        date,
+        {
+          userId: currentUser.id,
+          userName: currentUser.name,
+          userEmail: currentUser.email,
+        },
+        slotConfig.timeRange.split(' - ')[0]
+      );
     } catch (error) {
       console.error("Erro no handleSignUp:", error);
     } finally {
@@ -104,7 +112,18 @@ export function AulaSlotDisplay({ slotConfig, date, displayDate, allSignUps }: A
     <Card className="shadow-lg">
       <CardHeader>
         <CardTitle className="text-xl">{slotConfig.label} - {displayDate}</CardTitle>
-        <CardDescription>{slotConfig.timeRange}</CardDescription>
+        <CardDescription
+          onClick={() => {
+            if (!currentUser) {
+              router.push('/login');
+            } else if (!currentUserSignUp && !isSlotFull && !isSubmitting && !authLoading) {
+              handleSignUp();
+            }
+          }}
+          className="cursor-pointer hover:underline"
+        >
+          {slotConfig.timeRange}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="mb-4">

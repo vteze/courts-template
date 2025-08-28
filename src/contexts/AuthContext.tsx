@@ -544,7 +544,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   useEffect(() => {
-    const protectedRoutes = ['/my-bookings', '/admin']; 
+    const protectedRoutes = ['/admin'];
     if (!isLoading && !currentUser && protectedRoutes.includes(pathname)) {
       router.push('/login');
     }

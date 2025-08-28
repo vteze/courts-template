@@ -69,7 +69,7 @@ Para o CORPO do email (emailBody):
 - Confirme os detalhes da reserva de forma clara (Quadra, Data, Hora, ID da Reserva).
 - Se 'onBehalfOfName' existir, adicione uma linha: "Esta reserva foi feita por {{userName}} em seu nome."
 - Inclua uma frase como "Estamos ansiosos para recebê-lo(a)!".
-- Adicione informações úteis, como "Chegue com 10 minutos de antecedência." e "Em caso de necessidade de cancelamento, acesse 'Minhas Reservas' em nosso site ou app (se a reserva foi feita por você) ou entre em contato com {{userName}} (se a reserva foi feita em seu nome).".
+- Adicione informações úteis, como "Chegue com 10 minutos de antecedência." e "Em caso de necessidade de cancelamento, entre em contato com a equipe ou com {{userName}} (se a reserva foi feita em seu nome).".
 - Termine com "Atenciosamente, Equipe Fúria Treinamentos Futevôlei".
 - Formate o corpo do email para ser legível (pode ser texto simples, com quebras de linha).
 

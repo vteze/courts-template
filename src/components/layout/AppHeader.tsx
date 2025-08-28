@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { LogIn, LogOut, ListChecks, HomeIcon as HomeLucideIcon, UserPlus, HelpCircle, BookOpen, ShieldAlert } from 'lucide-react'; // Added ShieldAlert for Admin
+import { LogIn, LogOut, HomeIcon as HomeLucideIcon, UserPlus, HelpCircle, BookOpen, ShieldAlert } from 'lucide-react'; // Added ShieldAlert for Admin
 import { APP_NAME } from '@/config/appConfig';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -73,9 +73,6 @@ export function AppHeader() {
   }
 
   let navLinksActual = [...navLinksBase];
-  if (currentUser) {
-    navLinksActual.push({ href: '/my-bookings', label: 'Minhas Reservas', icon: ListChecks });
-  }
   if (isAdmin) { // Add Admin link if user is admin
     navLinksActual.push({ href: '/admin', label: 'Admin', icon: ShieldAlert });
   }

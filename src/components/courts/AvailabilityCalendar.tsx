@@ -106,12 +106,16 @@ export function AvailabilityCalendar({
     if (isPlay) {
       const formattedSelectedDate = format(currentSelectedDate, 'yyyy-MM-dd');
       const dayOfWeek = currentSelectedDate.getDay();
-      const slotConfig = playSlotsConfig.find(s => s.dayOfWeek === dayOfWeek);
+      const slotConfig = playSlotsConfig.find(
+        s => s.dayOfWeek === dayOfWeek && s.timeRange.startsWith(time)
+      );
       if (!slotConfig) {
         toast({ variant: 'destructive', title: 'Configuração ausente', description: 'Nenhuma configuração de horários para este dia.' });
         return;
       }
-      const relevantForHour = playSignUps.filter(s => s.slotKey === slotConfig.key && s.date === formattedSelectedDate && s.time === time);
+      const relevantForHour = playSignUps.filter(
+        s => s.slotKey === slotConfig.key && s.date === formattedSelectedDate && s.time === time
+      );
       const me = relevantForHour.find(s => s.userId === currentUser.id);
       const isFull = relevantForHour.length >= maxParticipantsPerPlaySlot;
       try {
@@ -249,7 +253,7 @@ export function AvailabilityCalendar({
             {availableTimeSlots.map(t => {
               if (!isTimeInPlaySession(currentSelectedDate, t, playSlotsConfig)) return null;
               const dayOfWeek = currentSelectedDate.getDay();
-              const cfg = playSlotsConfig.find(s => s.dayOfWeek === dayOfWeek);
+              const cfg = playSlotsConfig.find(s => s.dayOfWeek === dayOfWeek && s.timeRange.startsWith(t));
               const dateStr = format(currentSelectedDate, 'yyyy-MM-dd');
               const list = cfg ? playSignUps.filter(su => su.slotKey === cfg.key && su.date === dateStr && su.time === t) : [];
               const me = list.find(su => su.userId === currentUser?.id);
