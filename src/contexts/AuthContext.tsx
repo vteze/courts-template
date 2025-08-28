@@ -44,9 +44,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [playSignUps, setPlaySignUps] = useState<PlaySignUp[]>([]); 
+  const [playSignUps, setPlaySignUps] = useState<PlaySignUp[]>([]);
   const [totalUsers, setTotalUsers] = useState<number>(0);
-  const [isLoading, setIsLoading] = useState(true); 
+  const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
   const router = useRouter();
   const pathname = usePathname();
@@ -158,6 +159,43 @@ export function AuthProvider({ children }: AuthProviderProps) {
       unsubscribePlaySignUps();
     };
   }, [toast]);
+
+  useEffect(() => {
+    let unsubscribeUsers: (() => void) | undefined;
+
+    if (isAdmin) {
+      const usersColRef = collection(db, USERS_COLLECTION_NAME);
+      unsubscribeUsers = onSnapshot(usersColRef, (querySnapshot) => {
+        const fetchedUsers: User[] = [];
+        querySnapshot.forEach((docSnap) => {
+          const data = docSnap.data() as any;
+          fetchedUsers.push({
+            id: docSnap.id,
+            name: data.name || data.email || "Usuário",
+            email: data.email || "",
+            planPerWeek: (data.planPerWeek as number | undefined) ?? 1,
+          });
+        });
+        setUsers(fetchedUsers);
+        setTotalUsers(querySnapshot.size);
+      }, (error: any) => {
+        console.error("Error fetching users:", error);
+        toast({
+          variant: "destructive",
+          title: "Erro ao Buscar Usuários (Admin)",
+          description: `Permissão negada ou erro ao carregar usuários. ${getFirebaseErrorMessage(error.code, "Falha ao carregar usuários.")}`,
+          duration: 9000,
+        });
+      });
+    } else {
+      setUsers([]);
+      setTotalUsers(0);
+    }
+
+    return () => {
+      if (unsubscribeUsers) unsubscribeUsers();
+    };
+  }, [isAdmin, toast]);
 
 
   const login = async (email: string, pass: string) => {
@@ -543,6 +581,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const updateUserPlan = async (userId: string, planPerWeek: number) => {
+    if (!isAdmin) {
+      toast({ variant: "destructive", title: "Não Autorizado", description: "Apenas administradores podem alterar planos." });
+      return Promise.reject(new Error("Não autorizado."));
+    }
+    try {
+      const userDocRef = doc(db, USERS_COLLECTION_NAME, userId);
+      await updateDoc(userDocRef, { planPerWeek });
+      toast({ title: "Plano Atualizado", description: "O plano do usuário foi atualizado." });
+    } catch (error: any) {
+      console.error(`Erro ao atualizar plano do usuário ${userId}:`, error);
+      toast({
+        variant: "destructive",
+        title: "Falha ao Atualizar Plano",
+        description: getFirebaseErrorMessage(error.code, "Não foi possível atualizar o plano do usuário."),
+      });
+      throw error;
+    }
+  };
+
   useEffect(() => {
     const protectedRoutes = ['/admin'];
     if (!isLoading && !currentUser && protectedRoutes.includes(pathname)) {
@@ -560,20 +618,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
       currentUser, 
       isAdmin,
       bookings, 
-      playSignUps, 
+      playSignUps,
       totalUsers,
-      login, 
-      signUp, 
-      logout, 
+      users,
+      login,
+      signUp,
+      logout,
       sendPasswordReset, 
       addBooking, 
       cancelBooking, 
       updateBookingByAdmin,
-      signUpForPlaySlot, 
-      cancelPlaySlotSignUp, 
-      isLoading, 
-      authError, 
-      clearAuthError 
+      signUpForPlaySlot,
+      cancelPlaySlotSignUp,
+      updateUserPlan,
+      isLoading,
+      authError,
+      clearAuthError
     }}>
       {children}
     </AuthContext.Provider>
