@@ -17,11 +17,7 @@ export const courts: Court[] = [
   },
 ];
 
-export const availableTimeSlots: string[] = [
-  "17:00-18:00",
-  "18:00-19:00",
-  "19:00-20:00",
-];
+export const availableTimeSlots: string[] = ["17:00", "18:00", "19:00"];
 
 // Configuração das aulas diárias com três horários de uma hora cada (17h–20h)
 export const playSlotsConfig: PlaySlotConfig[] = [
