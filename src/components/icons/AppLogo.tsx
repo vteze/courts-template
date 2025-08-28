@@ -1,6 +1,6 @@
 
 import Image from 'next/image';
-import furiaLogo from './furia.jpg'; // Importa a imagem localmente
+import furiaLogo from './furia-new.png'; // Importa a nova imagem localmente
 
 export function AppLogo() {
   return (

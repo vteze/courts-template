@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { LogIn, LogOut, ListChecks, HomeIcon as HomeLucideIcon, UserPlus, HelpCircle, Swords, ShieldAlert } from 'lucide-react'; // Added ShieldAlert for Admin
+import { LogIn, LogOut, ListChecks, HomeIcon as HomeLucideIcon, UserPlus, HelpCircle, BookOpen, ShieldAlert } from 'lucide-react'; // Added ShieldAlert for Admin
 import { APP_NAME } from '@/config/appConfig';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -32,7 +32,7 @@ export function AppHeader() {
 
   const navLinksBase = [
     { href: '/', label: 'Início', icon: HomeLucideIcon },
-    { href: '/play', label: 'Play', icon: Swords },
+    { href: '/aulas', label: 'Aulas', icon: BookOpen },
     { href: '/faq', label: 'FAQ', icon: HelpCircle },
   ];
 
@@ -143,7 +143,7 @@ export function AppHeader() {
               <Button asChild variant="outline" size="sm">
                 <Link href="/login">
                   <LogIn className="h-4 w-4 md:mr-2" />
-                  <span className="hidden md:inline">Entrar</span>
+                  <span className="hidden md:inline">Login</span>
                 </Link>
               </Button>
               <Button asChild variant="default" size="sm">

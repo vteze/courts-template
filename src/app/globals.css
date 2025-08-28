@@ -15,7 +15,7 @@
     --popover: 0 0% 10%;
     --popover-foreground: 0 0% 100%;
 
-    --primary: 266 83% 60%; /* Roxo Fúria */
+    --primary: 220 80% 40%; /* Azul escuro principal */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 20%;
@@ -24,7 +24,7 @@
     --muted: 0 0% 25%;
     --muted-foreground: 0 0% 70%;
 
-    --accent: 266 83% 60%;
+    --accent: 220 80% 40%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
@@ -32,12 +32,12 @@
 
     --border: 0 0% 20%;
     --input: 0 0% 20%;
-    --ring: 266 83% 60%;
+    --ring: 220 80% 40%;
 
     --radius: 0.5rem;
 
-    --chart-1: 266 83% 60%;
-    --chart-2: 266 60% 40%;
+    --chart-1: 220 80% 40%;
+    --chart-2: 220 60% 30%;
     --chart-3: 0 0% 30%;
     --chart-4: 0 0% 60%;
     --chart-5: 0 0% 80%;
@@ -53,7 +53,7 @@
     --popover: 0 0% 10%;
     --popover-foreground: 0 0% 100%;
 
-    --primary: 266 83% 60%;
+    --primary: 220 80% 40%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 20%;
@@ -62,7 +62,7 @@
     --muted: 0 0% 25%;
     --muted-foreground: 0 0% 70%;
 
-    --accent: 266 83% 60%;
+    --accent: 220 80% 40%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62.8% 30.6%;
@@ -70,10 +70,10 @@
 
     --border: 0 0% 20%;
     --input: 0 0% 20%;
-    --ring: 266 83% 60%;
+    --ring: 220 80% 40%;
 
-    --chart-1: 266 83% 60%;
-    --chart-2: 266 60% 40%;
+    --chart-1: 220 80% 40%;
+    --chart-2: 220 60% 30%;
     --chart-3: 0 0% 30%;
     --chart-4: 0 0% 60%;
     --chart-5: 0 0% 80%;

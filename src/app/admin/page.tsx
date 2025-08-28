@@ -181,12 +181,12 @@ export default function AdminDashboardPage() {
           </Card>
           <Card className="shadow-md hover:shadow-lg transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Inscrições no "Play"</CardTitle>
+              <CardTitle className="text-sm font-medium">Inscrições nas Aulas</CardTitle>
               <Users className="h-5 w-5 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalPlaySignUpsCount}</div>
-              <p className="text-xs text-muted-foreground">Total de inscrições em sessões "Play".</p>
+              <p className="text-xs text-muted-foreground">Total de inscrições nas aulas.</p>
             </CardContent>
           </Card>
           <Card className="shadow-md hover:shadow-lg transition-shadow">
@@ -328,12 +328,12 @@ export default function AdminDashboardPage() {
         </div>
         
         <div>
-            <h2 className="text-2xl font-semibold tracking-tight mb-4 text-primary/90">Atividade "Play"</h2>
+            <h2 className="text-2xl font-semibold tracking-tight mb-4 text-primary/90">Atividade de Aulas</h2>
             <p className="text-sm text-muted-foreground mb-4">Exibindo dados para o período: {dateRangeLabel}</p>
              <Card className="shadow-md hover:shadow-lg transition-shadow">
               <CardHeader>
-                <CardTitle>Inscrições no "Play" no Período Selecionado</CardTitle>
-                <CardDescription>Volume de inscrições nas sessões "Play" no período.</CardDescription>
+                <CardTitle>Inscrições nas Aulas no Período Selecionado</CardTitle>
+                <CardDescription>Volume de inscrições nas aulas no período.</CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -347,7 +347,7 @@ export default function AdminDashboardPage() {
                         itemStyle={{ color: chartAccentFill }}
                     />
                     <Legend wrapperStyle={{fontSize: '12px'}}/>
-                    <Line type="monotone" dataKey="count" stroke={chartAccentFill} name="Inscrições Play" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                    <Line type="monotone" dataKey="count" stroke={chartAccentFill} name="Inscrições Aulas" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
                   </LineChart>
                 </ResponsiveContainer>
               </CardContent>
