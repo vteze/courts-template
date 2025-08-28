@@ -1,4 +1,3 @@
-
 export interface User {
   id: string;
   name: string;
@@ -10,7 +9,7 @@ export interface User {
 export interface Court {
   id: string;
   name: string;
-  type: 'covered' | 'uncovered';
+  type: "covered" | "uncovered";
   imageUrl: string;
   description: string;
   dataAiHint: string;
@@ -23,7 +22,7 @@ export interface Booking {
   onBehalfOf?: string; // Optional: Name of the person this booking is for, if admin booked it
   courtId: string;
   courtName: string;
-  courtType: 'covered' | 'uncovered';
+  courtType: "covered" | "uncovered";
   date: string; // YYYY-MM-DD
   time: string; // HH:mm
 }
@@ -47,18 +46,19 @@ export interface PlaySignUp {
   userName: string;
   userEmail: string;
   slotKey: string; // Corresponds to PlaySlotConfig.key
-  date: string; // YYYY-MM-DD, specific date of the play session
+  date: string; // YYYY-MM-DD, specific date of the Aula session
   time?: string; // HH:mm, opcional quando a inscrição é por horário
   signedUpAt: any; // Firestore Timestamp
 }
 
-
-import type { ReactNode } from 'react';
-import type { personalizedBookingConfirmation, PersonalizedBookingConfirmationInput as AIInputType } from '@/ai/flows/booking-confirmation'; // Adjusted import
+import type { ReactNode } from "react";
+import type {
+  personalizedBookingConfirmation,
+  PersonalizedBookingConfirmationInput as AIInputType,
+} from "@/ai/flows/booking-confirmation"; // Adjusted import
 
 // Re-export AI types if they are defined in the AI flow file
 export type PersonalizedBookingConfirmationInput = AIInputType;
-
 
 export interface AuthContextType {
   currentUser: User | null;
@@ -71,11 +71,24 @@ export interface AuthContextType {
   signUp: (name: string, email: string, pass: string) => Promise<void>;
   logout: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
-  addBooking: (newBookingData: Omit<Booking, 'id' | 'userId' | 'userName' | 'onBehalfOf'>, onBehalfOfName?: string) => Promise<string>;
+  addBooking: (
+    newBookingData: Omit<Booking, "id" | "userId" | "userName" | "onBehalfOf">,
+    onBehalfOfName?: string
+  ) => Promise<string>;
   cancelBooking: (bookingId: string) => Promise<void>;
-  updateBookingByAdmin: (bookingId: string, newDate: string, newTime: string, newOnBehalfOfName?: string) => Promise<void>;
-  // Inscrição no Play; quando time é fornecido, a capacidade/único é por horário
-  signUpForPlaySlot: (slotKey: string, date: string, userDetails: { userId: string, userName: string, userEmail: string }, time?: string) => Promise<void>;
+  updateBookingByAdmin: (
+    bookingId: string,
+    newDate: string,
+    newTime: string,
+    newOnBehalfOfName?: string
+  ) => Promise<void>;
+  // Inscrição no Aula; quando time é fornecido, a capacidade/único é por horário
+  signUpForPlaySlot: (
+    slotKey: string,
+    date: string,
+    userDetails: { userId: string; userName: string; userEmail: string },
+    time?: string
+  ) => Promise<void>;
   cancelPlaySlotSignUp: (signUpId: string) => Promise<void>;
   updateUserPlan: (userId: string, planPerWeek: number) => Promise<void>;
   isLoading: boolean;
@@ -86,4 +99,3 @@ export interface AuthContextType {
 export interface AuthProviderProps {
   children: ReactNode;
 }
-

@@ -69,7 +69,7 @@ export default function AdminDashboardPage() {
         const signUpDate = parseISO(ps.date);
         return isWithinInterval(signUpDate, { start, end });
       } catch (e) {
-        console.warn(`Invalid date format for play sign up id ${ps.id}: ${ps.date}`);
+        console.warn(`Invalid date format for Aula sign up id ${ps.id}: ${ps.date}`);
         return false;
       }
     });
