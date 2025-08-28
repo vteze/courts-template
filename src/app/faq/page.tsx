@@ -43,12 +43,12 @@ const faqData: FaqItem[] = [
   {
     question: "A arena possui estacionamento disponível?",
     answer:
-      "A arena não possui estacionamento próprio. No entanto, é geralmente possível estacionar na Rua Comendador Rodolfo Gomes, bem em frente à arena. Recomendamos sempre observar a sinalização local de trânsito e restrições de estacionamento.",
+      "Sim. Estamos no endereço Av. Edgar Píres de Castro, 986 - Hípica, Porto Alegre - RS, e contamos com estacionamento gratuito para alunos.",
   },
   {
     question: "Como funcionam as inscrições por horário?",
     answer:
-      "Após fazer login, escolha a data e o horário desejado (17:00, 18:00 ou 19:00) diretamente no cartão da quadra e clique em 'Entrar'. Cada horário possui vagas limitadas (12). Se mudar de ideia, clique em 'Sair' para cancelar sua inscrição.",
+      "Após fazer login, escolha a data e o horário desejado (17:00, 18:00 ou 19:00) diretamente no cartão da quadra e clique em 'Inscrever-se'. Cada horário possui vagas limitadas (12). Se mudar de ideia, clique em 'Cancelar' para remover sua inscrição.",
   },
   {
     question: "Como faço para reservar uma quadra?",

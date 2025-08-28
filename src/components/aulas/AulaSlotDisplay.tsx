@@ -23,14 +23,14 @@ import {
 } from "@/components/ui/alert-dialog";
 
 
-interface PlaySlotDisplayProps {
+interface AulaSlotDisplayProps {
   slotConfig: PlaySlotConfig;
   date: string; // YYYY-MM-DD (for logic)
   displayDate: string; // dd/MM (for display in title)
   allSignUps: PlaySignUp[]; // Todas as inscrições para filtrar
 }
 
-export function PlaySlotDisplay({ slotConfig, date, displayDate, allSignUps }: PlaySlotDisplayProps) {
+export function AulaSlotDisplay({ slotConfig, date, displayDate, allSignUps }: AulaSlotDisplayProps) {
   const { currentUser, isAdmin, signUpForPlaySlot, cancelPlaySlotSignUp, isLoading: authLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [signUpToRemove, setSignUpToRemove] = useState<PlaySignUp | null>(null);
@@ -180,7 +180,7 @@ export function PlaySlotDisplay({ slotConfig, date, displayDate, allSignUps }: P
             className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
           >
             {isSubmitting ? <Loader2 className="animate-spin mr-2" /> : <UserPlus className="mr-2" />}
-            Inscrever-se no Play
+            Inscrever-se na Aula
           </Button>
         )}
       </CardFooter>

@@ -4,18 +4,18 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ListChecks, CalendarClock, Users, Swords, CalendarDays } from "lucide-react";
+import { ListChecks, CalendarClock, Users, BookOpen, CalendarDays } from "lucide-react";
 import Link from "next/link";
 import { playSlotsConfig, numberOfWeeksToDisplayPlaySlots, maxParticipantsPerPlaySlot, type PlaySlotConfig } from '@/config/appConfig';
-import { PlaySlotDisplay } from '@/components/play/PlaySlotDisplay';
+import { AulaSlotDisplay } from '@/components/aulas/AulaSlotDisplay';
 import { useAuth } from '@/hooks/useAuth';
 import { format, parseISO, startOfDay, addDays, getDay, nextDay as dateFnsNextDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 
-// Interface para uma instância individual de Play Slot
-interface PlaySlotInstance {
+// Interface para uma instância individual de Aula
+interface AulaSlotInstance {
   slotConfig: PlaySlotConfig;
   date: string; // YYYY-MM-DD para lógica
   displayDate: string; // DD/MM para exibição
@@ -48,7 +48,7 @@ const getNextOccurrences = (targetDayOfWeek: number, count: number): Array<{ dat
 };
 
 
-function PlayPage() {
+function AulasPage() {
   const { playSignUps, isLoading: authLoading } = useAuth();
   const [isClient, setIsClient] = useState(false);
 
@@ -58,7 +58,7 @@ function PlayPage() {
 
   const chronologicallySortedPlaySlots = useMemo(() => {
     const now = new Date(); // Hora atual no fuso horário do cliente
-    const allUpcomingSlots: PlaySlotInstance[] = [];
+    const allUpcomingSlots: AulaSlotInstance[] = [];
 
     playSlotsConfig.forEach(slot => {
       const occurrences = getNextOccurrences(slot.dayOfWeek, numberOfWeeksToDisplayPlaySlots);
@@ -98,19 +98,19 @@ function PlayPage() {
     <div className="w-full max-w-5xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-12">
       <header className="text-center">
         <div className="flex items-center justify-center gap-3 mb-4">
-          <Swords className="h-12 w-12 text-primary" />
+          <BookOpen className="h-12 w-12 text-primary" />
           <h1 className="text-4xl font-bold tracking-tight text-primary">
-            Entre no Jogo: Sessões "Play" na Fúria Treinamentos!
+            Participe das nossas Aulas na Fúria Treinamentos!
           </h1>
         </div>
         <p className="text-lg text-foreground/70 max-w-3xl mx-auto">
-          Junte-se às nossas sessões "Play"! Horários fixos diários (das {playSlotsConfig[0].timeRange}), vagas limitadas ({maxParticipantsPerPlaySlot} por sessão), muita diversão e a chance de conhecer novos parceiros de jogo. As sessões "Play" acontecem na nossa quadra da arena. Inscreva-se individualmente e garanta sua partida.
+          Nossas aulas acontecem diariamente (das {playSlotsConfig[0].timeRange}) com vagas limitadas ({maxParticipantsPerPlaySlot} por horário). Garanta sua presença e evolua no futevôlei com a gente.
         </p>
       </header>
 
-      <section id="upcoming-play-sessions" className="space-y-8 scroll-mt-20"> 
+      <section id="upcoming-aulas" className="space-y-8 scroll-mt-20">
         <h2 className="text-3xl font-semibold text-primary text-center mb-8 flex items-center justify-center gap-2">
-          <CalendarDays className="mr-2 h-8 w-8" /> Próximas Sessões "Play"
+          <CalendarDays className="mr-2 h-8 w-8" /> Próximas Aulas
         </h2>
 
         {authLoading && (
@@ -122,7 +122,7 @@ function PlayPage() {
         {!authLoading && chronologicallySortedPlaySlots.length > 0 && (
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
             {chronologicallySortedPlaySlots.map(slotInstance => (
-              <PlaySlotDisplay
+              <AulaSlotDisplay
                 key={slotInstance.uniqueKey}
                 slotConfig={slotInstance.slotConfig}
                 date={slotInstance.date} // YYYY-MM-DD
@@ -132,12 +132,12 @@ function PlayPage() {
             ))}
           </div>
         )}
-        
+
          {!authLoading && chronologicallySortedPlaySlots.length === 0 && (
             <Card className="text-center py-10">
                 <CardContent>
                     <CalendarClock className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-xl font-medium text-muted-foreground">Nenhuma sessão "Play" agendada para as próximas semanas.</p>
+                    <p className="text-xl font-medium text-muted-foreground">Nenhuma aula agendada para as próximas semanas.</p>
                     <p className="text-muted-foreground mt-2">Por favor, verifique novamente mais tarde ou entre em contato.</p>
                 </CardContent>
             </Card>
@@ -150,32 +150,32 @@ function PlayPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-2xl text-primary">
             <ListChecks className="mr-2 h-6 w-6" />
-            Como Funciona o "Play"
+            Como Funcionam as Aulas
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6 text-foreground/80">
            <div>
             <h3 className="font-semibold text-primary mb-1">Agenda e Horários Fixos</h3>
             <p>
-              As sessões "Play" acontecem diariamente, das {playSlotsConfig[0].timeRange}. Veja as datas disponíveis acima e inscreva-se!
+              As aulas acontecem diariamente, das {playSlotsConfig[0].timeRange}. Veja as datas disponíveis acima e inscreva-se!
             </p>
           </div>
           <div>
             <h3 className="font-semibold text-primary mb-1">Inscrição Individual</h3>
             <p>
-              As vagas são limitadas a {maxParticipantsPerPlaySlot} participantes por sessão para garantir uma ótima experiência de jogo e interação. Faça sua inscrição individualmente através desta página para garantir sua vaga. É necessário estar logado.
+              As vagas são limitadas a {maxParticipantsPerPlaySlot} participantes por aula para garantir uma ótima experiência e evolução. Faça sua inscrição individualmente através desta página para garantir sua vaga. É necessário estar logado.
             </p>
           </div>
           <div>
-            <h3 className="font-semibold text-primary mb-1">Formato da Sessão</h3>
+            <h3 className="font-semibold text-primary mb-1">Formato das Aulas</h3>
             <p>
-              Durante as sessões "Play", realizadas na quadra da arena, os jogos são organizados de forma dinâmica, geralmente em formato de rodízio ou desafios. Isso garante que todos os participantes joguem bastante e interajam com diferentes parceiros e oponentes. O foco é a diversão, a prática esportiva e a socialização!
+              Durante as aulas, realizadas na quadra da arena, os treinos são conduzidos de forma orientada pelo instrutor, focando em técnica e prática do futevôlei.
             </p>
           </div>
           <div>
             <h3 className="font-semibold text-primary mb-1">Exclusividade dos Horários</h3>
             <p>
-               Os horários dedicados às sessões "Play" (das {playSlotsConfig[0].timeRange}) são exclusivos para esta modalidade. Durante esses períodos, a quadra da arena é reservada para o "Play" e não estará disponível para aluguel avulso, garantindo o espaço para os participantes inscritos.
+               Os horários das aulas (das {playSlotsConfig[0].timeRange}) são exclusivos para esta modalidade. Durante esses períodos, a quadra da arena é reservada para as aulas e não estará disponível para aluguel avulso, garantindo o espaço para os participantes inscritos.
             </p>
           </div>
         </CardContent>
@@ -183,16 +183,16 @@ function PlayPage() {
       
       <section className="text-center mt-12 py-10 bg-gradient-to-r from-primary/5 via-background to-background rounded-lg shadow-sm border border-border/50">
         <h2 className="text-3xl font-bold text-primary mb-4">
-          Pronto para Entrar em Quadra?
+          Pronto para treinar?
         </h2>
         <p className="text-lg text-foreground/70 mb-8 max-w-xl mx-auto">
-          Não perca tempo! Verifique as datas disponíveis acima e garanta sua vaga nas próximas sessões "Play". Estamos te esperando!
+          Não perca tempo! Verifique as datas disponíveis acima e garanta sua vaga nas próximas aulas. Estamos te esperando!
         </p>
         {isClient ? (
           <Button size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground shadow-md hover:shadow-lg transition-shadow" asChild>
-            <Link href="#upcoming-play-sessions">
+            <Link href="#upcoming-aulas">
               <CalendarClock className="mr-2 h-5 w-5" />
-              Ver Sessões e Inscrever-se
+              Ver Aulas e Inscrever-se
             </Link>
           </Button>
         ) : (
@@ -203,6 +203,6 @@ function PlayPage() {
   );
 }
 
-export default PlayPage;
+export default AulasPage;
 
     

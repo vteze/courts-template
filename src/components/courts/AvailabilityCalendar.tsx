@@ -11,7 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { availableTimeSlots, playSlotsConfig, maxParticipantsPerPlaySlot } from '@/config/appConfig';
 import { BookingConfirmationDialog } from '@/components/bookings/BookingConfirmationDialog';
-import { AlertCircle, Swords } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
@@ -24,7 +24,7 @@ interface AvailabilityCalendarProps {
   onDateSelect: (date?: Date) => void;
 }
 
-// Helper function to check if a given time is within a "Play" session
+// Helper function to check if a given time is within uma sessão de aula
 function isTimeInPlaySession(date: Date, slotStartTime: string, playConfig: PlaySlotConfig[]): boolean {
   const dayOfWeek = date.getDay(); // 0 for Sunday, ..., 6 for Saturday
 
@@ -41,7 +41,7 @@ function isTimeInPlaySession(date: Date, slotStartTime: string, playConfig: Play
       const rangeStartMinutes = timeToMinutes(rangeStart);
       const rangeEndMinutes = timeToMinutes(rangeEnd);
 
-      // A slot is part of "Play" if its start time is within the Play range [start, end)
+      // A slot é parte da aula se seu horário inicial estiver dentro do intervalo [início, fim)
       if (slotStartMinutes >= rangeStartMinutes && slotStartMinutes < rangeEndMinutes) {
         return true;
       }
@@ -175,33 +175,29 @@ export function AvailabilityCalendar({
                       let ariaLabel = `Reservar ${slot.time}`;
 
                       if (slot.isPlayTime) {
-                        const formattedSelectedDate = currentSelectedDate ? format(currentSelectedDate, 'yyyy-MM-dd') : '';
-                        const dow = currentSelectedDate ? currentSelectedDate.getDay() : -1;
-                        const cfg = playSlotsConfig.find(s => s.dayOfWeek === dow);
-                        const relevantForHour: PlaySignUp[] = (cfg && currentSelectedDate)
-                          ? playSignUps.filter(s => s.slotKey === cfg.key && s.date === formattedSelectedDate && s.time === slot.time)
-                          : [];
-                        const count = relevantForHour.length;
-                        const me = relevantForHour.find(s => s.userId === currentUser?.id);
-
-                        buttonVariant = me ? "destructive" : "default";
-                        buttonText = me ? `Sair (${count}/${maxParticipantsPerPlaySlot})` : `Entrar (${count}/${maxParticipantsPerPlaySlot})`;
-                        IconComponent = Swords;
-                        isDisabled = false;
-                        onClickAction = () => handleTimeSlotClick(slot.time, true);
-                        ariaLabel = me ? `Sair do horário ${slot.time}` : `Entrar no horário ${slot.time}`;
-                        if (!me && count >= maxParticipantsPerPlaySlot) {
-                          buttonVariant = "destructive";
-                          isDisabled = true;
-                          buttonText = `Esgotado (${count}/${maxParticipantsPerPlaySlot})`;
-                          ariaLabel = `Horário ${slot.time} sem vagas`;
-                        }
+                        buttonVariant = "outline";
+                        buttonText = slot.time;
+                        isDisabled = true;
+                        onClickAction = () => {};
+                        ariaLabel = slot.time;
+                        IconComponent = null;
                       } else if (slot.isBooked) {
                         buttonVariant = "destructive";
                         isDisabled = true;
                         ariaLabel = `Horário ${slot.time} indisponível`;
                       }
                       
+                      if (slot.isPlayTime) {
+                        return (
+                          <div
+                            key={slot.time}
+                            className="w-full p-2 border rounded-md text-center text-sm"
+                            aria-label={ariaLabel}
+                          >
+                            {buttonText}
+                          </div>
+                        );
+                      }
                       return (
                         <Button
                           key={slot.time}
@@ -211,8 +207,7 @@ export function AvailabilityCalendar({
                           className={cn(
                             "w-full transition-colors duration-150 ease-in-out group",
                             isDisabled && 'cursor-not-allowed opacity-70',
-                            slot.isPlayTime && 'bg-accent text-accent-foreground hover:bg-accent/90 focus:bg-accent/90',
-                            !slot.isPlayTime && !slot.isBooked && 'hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground'
+                            !slot.isBooked && 'hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground'
                           )}
                           aria-label={ariaLabel}
                         >
