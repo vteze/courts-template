@@ -178,29 +178,33 @@ export function AvailabilityCalendar({
                       let onClickAction = () => handleTimeSlotClick(slot.time, !!slot.isPlayTime);
                       let ariaLabel = `Reservar ${slot.time}`;
 
+                      // Derive play slot config and enrollment state when applicable
+                      const dayOfWeek = currentSelectedDate.getDay();
+                      const cfg = playSlotsConfig.find(
+                        (s) => s.dayOfWeek === dayOfWeek && s.timeRange.startsWith(slot.time)
+                      );
+                      const dateStr = format(currentSelectedDate, 'yyyy-MM-dd');
+                      const playList = cfg
+                        ? playSignUps.filter((su) => su.slotKey === cfg.key && su.date === dateStr && su.time === slot.time)
+                        : [];
+                      const meInPlay = playList.find((su) => su.userId === currentUser?.id);
+                      const playFull = playList.length >= maxParticipantsPerPlaySlot;
+
                       if (slot.isPlayTime) {
-                        buttonVariant = "outline";
-                        buttonText = slot.time;
-                        isDisabled = true;
-                        onClickAction = () => {};
-                        ariaLabel = slot.time;
+                        buttonVariant = meInPlay ? "destructive" : "outline";
+                        buttonText = cfg?.timeRange ?? slot.time;
+                        isDisabled = !meInPlay && playFull;
+                        onClickAction = () => handleTimeSlotClick(slot.time, true);
+                        ariaLabel = meInPlay
+                          ? `Cancelar inscrição em ${cfg?.timeRange ?? slot.time}`
+                          : playFull
+                          ? `Horário ${cfg?.timeRange ?? slot.time} esgotado`
+                          : `Inscrever-se em ${cfg?.timeRange ?? slot.time}`;
                         IconComponent = null;
                       } else if (slot.isBooked) {
                         buttonVariant = "destructive";
                         isDisabled = true;
                         ariaLabel = `Horário ${slot.time} indisponível`;
-                      }
-                      
-                      if (slot.isPlayTime) {
-                        return (
-                          <div
-                            key={slot.time}
-                            className="w-full p-2 border rounded-md text-center text-sm"
-                            aria-label={ariaLabel}
-                          >
-                            {buttonText}
-                          </div>
-                        );
                       }
                       return (
                         <Button
@@ -261,7 +265,18 @@ export function AvailabilityCalendar({
               return (
                 <div key={t} className="border rounded-md p-2">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium">{t}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleTimeSlotClick(t, true)}
+                      className={cn(
+                        "font-medium text-left hover:underline",
+                        !me && isFull && "cursor-not-allowed opacity-70"
+                      )}
+                      disabled={!me && isFull}
+                      aria-label={me ? `Cancelar inscrição em ${cfg?.timeRange ?? t}` : isFull ? `Horário ${cfg?.timeRange ?? t} esgotado` : `Inscrever-se em ${cfg?.timeRange ?? t}`}
+                    >
+                      {cfg?.timeRange ?? t}
+                    </button>
                     <Button
                       size="sm"
                       variant={me ? "destructive" : "outline"}
