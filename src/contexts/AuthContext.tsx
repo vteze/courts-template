@@ -509,7 +509,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
       const existingSignUpSnapshot = await getDocs(signUpsQuery);
       if (!existingSignUpSnapshot.empty) {
-        toast({ variant: "default", title: "Já Inscrito", description: "Você já está inscrito para este horário do Aula." });
+        toast({ variant: "default", title: "Já Inscrito", description: "Você já está inscrito para este horário da Aula." });
         return;
       }
 
@@ -530,7 +530,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
       const allSignUpsSnapshot = await getDocs(allSignUpsForSlotQuery);
       if (allSignUpsSnapshot.size >= maxParticipantsPerPlaySlot) {
-        toast({ variant: "destructive", title: "Vagas Esgotadas", description: "Este horário do Aula já atingiu o número máximo de participantes." });
+        toast({ variant: "destructive", title: "Vagas Esgotadas", description: "Este horário da Aula já atingiu o número máximo de participantes." });
         return Promise.reject(new Error("Vagas esgotadas."));
       }
 
@@ -544,12 +544,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
         signedUpAt: Timestamp.now(),
       };
       await addDoc(collection(db, PLAY_SIGNUPS_COLLECTION_NAME), newSignUpData);
-      toast({ title: "Inscrição Confirmada!", description: `Você foi inscrito para o Aula em ${date}.` });
+      toast({ title: "Inscrição Confirmada!", description: `Você foi inscrito para a Aula em ${date}.` });
 
     } catch (error: any)
 {
       console.error(`Erro ao inscrever-se no Aula para slot ${slotKey} em ${date}: `, error);
-      toast({ variant: "destructive", title: "Falha na Inscrição do Aula", description: error.message || "Ocorreu um erro ao tentar se inscrever." });
+      toast({ variant: "destructive", title: "Falha na Inscrição da Aula", description: error.message || "Ocorreu um erro ao tentar se inscrever." });
       throw error;
     }
   };
@@ -569,13 +569,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       if (isAdmin || signUpDoc.data()?.userId === currentUser.id) {
           await deleteDoc(signUpDocRef);
-          toast({ title: "Inscrição Cancelada", description: "A inscrição no Aula foi cancelada." });
+          toast({ title: "Inscrição Cancelada", description: "A inscrição na Aula foi cancelada." });
       } else {
           throw new Error("Você não tem permissão para cancelar esta inscrição.");
       }
 
     } catch (error: any) {
-      console.error(`Erro ao cancelar inscrição do Aula (ID: ${signUpId}): `, error);
+      console.error(`Erro ao cancelar inscrição da Aula (ID: ${signUpId}): `, error);
       toast({ variant: "destructive", title: "Falha ao Cancelar Inscrição", description: error.message || "Ocorreu um erro." });
       throw error;
     }
