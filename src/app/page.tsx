@@ -30,7 +30,7 @@ export default function HomePage() {
               Fúria Treinamentos Futevôlei
             </h1>
             <p className="mt-6 max-w-2xl mx-auto text-lg text-foreground/80 sm:text-xl lg:text-2xl">
-              Escolha o horário e inscreva-se diretamente na quadra. Simples, rápido e com vagas limitadas por horário.
+              Escolha o horário e inscreva-se diretamente na quadra. Simples, rápido e como deve ser.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
               {isClient ? (
