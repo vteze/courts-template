@@ -66,6 +66,7 @@ export interface AuthContextType {
   bookings: Booking[];
   playSignUps: PlaySignUp[];
   totalUsers: number;
+  users: User[];
   login: (email: string, pass: string) => Promise<void>;
   signUp: (name: string, email: string, pass: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -76,6 +77,7 @@ export interface AuthContextType {
   // Inscrição no Play; quando time é fornecido, a capacidade/único é por horário
   signUpForPlaySlot: (slotKey: string, date: string, userDetails: { userId: string, userName: string, userEmail: string }, time?: string) => Promise<void>;
   cancelPlaySlotSignUp: (signUpId: string) => Promise<void>;
+  updateUserPlan: (userId: string, planPerWeek: number) => Promise<void>;
   isLoading: boolean;
   authError: string | null;
   clearAuthError: () => void;

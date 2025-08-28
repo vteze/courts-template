@@ -14,7 +14,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import type { PlaySignUp, User } from '@/lib/types';
 
 interface ChartData {
   name: string;
@@ -24,12 +27,13 @@ interface ChartData {
 }
 
 export default function AdminDashboardPage() {
-  const { currentUser, isAdmin, bookings, playSignUps, totalUsers, isLoading: authLoading } = useAuth();
+  const { currentUser, isAdmin, bookings, playSignUps, totalUsers, users, updateUserPlan, isLoading: authLoading } = useAuth();
   const router = useRouter();
 
   const [isClient, setIsClient] = useState(false);
   const [startDate, setStartDate] = useState<Date | undefined>(subDays(new Date(), 6));
   const [endDate, setEndDate] = useState<Date | undefined>(new Date());
+  const [editedPlans, setEditedPlans] = useState<Record<string, number>>({});
 
   const totalBookings = useMemo(() => bookings.length, [bookings]);
   const totalPlaySignUpsCount = useMemo(() => playSignUps.length, [playSignUps]);
@@ -86,7 +90,7 @@ export default function AdminDashboardPage() {
     const range = eachDayOfInterval({ start: startDate, end: endDate });
     return range.map(day => {
       const formattedDay = format(day, 'yyyy-MM-dd');
-      const count = filteredPlaySignUps.filter(ps => ps.date === formattedDay).length;
+      const count = filteredPlaySignUps.filter((ps: PlaySignUp) => ps.date === formattedDay).length;
       return { name: format(day, 'dd/MM', { locale: ptBR }), count };
     });
   }, [filteredPlaySignUps, startDate, endDate]);
@@ -102,6 +106,17 @@ export default function AdminDashboardPage() {
     }
     return "Últimos 7 dias";
   }, [startDate, endDate]);
+
+  const handlePlanChange = (userId: string, value: string) => {
+    const plan = parseInt(value);
+    setEditedPlans(prev => ({ ...prev, [userId]: plan }));
+  };
+
+  const handleSavePlan = async (userId: string) => {
+    const plan = editedPlans[userId];
+    if (!plan || isNaN(plan)) return;
+    await updateUserPlan(userId, plan);
+  };
 
   useEffect(() => {
     setIsClient(true);
@@ -354,7 +369,44 @@ export default function AdminDashboardPage() {
             </Card>
         </div>
       </section>
-      
+
+      {/* Users Management Section */}
+      <section className="mt-8 space-y-4">
+        <h2 className="text-2xl font-semibold tracking-tight text-primary/90">Usuários</h2>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Nome</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Plano (treinos/sem)</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {users.map((u: User) => (
+              <TableRow key={u.id}>
+                <TableCell>{u.name}</TableCell>
+                <TableCell>{u.email}</TableCell>
+                <TableCell>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={editedPlans[u.id] ?? u.planPerWeek ?? 1}
+                    onChange={(e) => handlePlanChange(u.id, e.target.value)}
+                    className="w-20"
+                  />
+                </TableCell>
+                <TableCell className="text-right">
+                  <Button size="sm" onClick={() => handleSavePlan(u.id)}>
+                    Salvar
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </section>
+
       <Card className="mt-10 shadow-md">
         <CardHeader>
             <CardTitle className="text-xl">Notas e Próximos Passos</CardTitle>
