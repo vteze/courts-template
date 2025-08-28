@@ -252,16 +252,27 @@ export function AvailabilityCalendar({
           <h4 className="text-md font-semibold mb-2">Inscritos por horário</h4>
           <div className="space-y-3">
             {availableTimeSlots.map(t => {
+              if (!isTimeInPlaySession(currentSelectedDate, t, playSlotsConfig)) return null;
               const dayOfWeek = currentSelectedDate.getDay();
               const cfg = playSlotsConfig.find(s => s.dayOfWeek === dayOfWeek);
               const dateStr = format(currentSelectedDate, 'yyyy-MM-dd');
               const list = cfg ? playSignUps.filter(su => su.slotKey === cfg.key && su.date === dateStr && su.time === t) : [];
+              const me = list.find(su => su.userId === currentUser?.id);
+              const isFull = list.length >= maxParticipantsPerPlaySlot;
               return (
                 <div key={t} className="border rounded-md p-2">
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-medium">{t}</span>
-                    <span className="text-sm text-muted-foreground">{list.length}/{maxParticipantsPerPlaySlot}</span>
+                    <Button
+                      size="sm"
+                      variant={me ? "destructive" : "outline"}
+                      disabled={!me && isFull}
+                      onClick={() => handleTimeSlotClick(t, true)}
+                    >
+                      {me ? "Cancelar" : isFull ? "Esgotado" : "Inscrever-se"}
+                    </Button>
                   </div>
+                  <span className="text-sm text-muted-foreground block mb-2">{list.length}/{maxParticipantsPerPlaySlot}</span>
                   {list.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
                       {list.map(su => (
