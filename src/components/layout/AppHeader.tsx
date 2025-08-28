@@ -84,7 +84,7 @@ export function AppHeader() {
         <Link href="/" className="mr-2 flex items-center gap-2 shrink-0">
           <AppLogo />
           <span className="font-semibold text-base sm:text-lg hidden sm:inline">{APP_NAME}</span>
-          <span className="font-semibold text-base sm:text-lg sm:hidden">AK</span>
+          <span className="font-semibold text-base sm:text-lg sm:hidden">FURIA</span>
         </Link>
 
         <nav className="flex items-center text-sm font-medium">
