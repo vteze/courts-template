@@ -32,7 +32,7 @@ export function AppHeader() {
 
   const navLinksBase = [
     { href: '/', label: 'Início', icon: HomeLucideIcon },
-    // { href: '/play', label: 'Play!', icon: Swords }, // ocultado: inscrição acontece no cartão da quadra
+    { href: '/play', label: 'Play', icon: Swords },
     { href: '/faq', label: 'FAQ', icon: HelpCircle },
   ];
 
