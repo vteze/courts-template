@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { BarChart, LineChart, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Bar, Line, ResponsiveContainer } from 'recharts';
-import { courts } from '@/config/appConfig';
+import { courts, playSlotsConfig } from '@/config/appConfig';
 import { format, subDays, parseISO, eachDayOfInterval, isWithinInterval, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Activity, BarChart3, CalendarCheck, Users, ShieldAlert, UsersRound, CalendarDays as CalendarIconLucide } from 'lucide-react'; // Renamed to avoid conflict
@@ -45,21 +45,6 @@ export default function AdminDashboardPage() {
     }));
   }, [bookings]);
 
-  const filteredBookings = useMemo(() => {
-    if (!startDate || !endDate) return bookings;
-    const start = startOfDay(startDate);
-    const end = startOfDay(endDate); 
-    return bookings.filter(b => {
-      try {
-        const bookingDate = parseISO(b.date);
-        return isWithinInterval(bookingDate, { start, end });
-      } catch (e) {
-        console.warn(`Invalid date format for booking id ${b.id}: ${b.date}`);
-        return false;
-      }
-    });
-  }, [bookings, startDate, endDate]);
-
   const filteredPlaySignUps = useMemo(() => {
     if (!startDate || !endDate) return playSignUps;
     const start = startOfDay(startDate);
@@ -75,16 +60,6 @@ export default function AdminDashboardPage() {
     });
   }, [playSignUps, startDate, endDate]);
 
-  const bookingsLastPeriod: ChartData[] = useMemo(() => {
-    if (!startDate || !endDate || !filteredBookings) return [];
-    const range = eachDayOfInterval({ start: startDate, end: endDate });
-    return range.map(day => {
-      const formattedDay = format(day, 'yyyy-MM-dd');
-      const count = filteredBookings.filter(b => b.date === formattedDay).length;
-      return { name: format(day, 'dd/MM', { locale: ptBR }), count };
-    });
-  }, [filteredBookings, startDate, endDate]);
-
   const playSignUpsLastPeriod: ChartData[] = useMemo(() => {
     if (!startDate || !endDate || !filteredPlaySignUps) return [];
     const range = eachDayOfInterval({ start: startDate, end: endDate });
@@ -94,6 +69,19 @@ export default function AdminDashboardPage() {
       return { name: format(day, 'dd/MM', { locale: ptBR }), count };
     });
   }, [filteredPlaySignUps, startDate, endDate]);
+
+  const playSignUpsPerTime: ChartData[] = useMemo(() => {
+    const timeOrder = Array.from(new Set(playSlotsConfig.map(slot => slot.timeRange)));
+    const counts: Record<string, number> = {};
+    timeOrder.forEach(time => (counts[time] = 0));
+    playSignUps.forEach(ps => {
+      const slot = playSlotsConfig.find(s => s.key === ps.slotKey);
+      if (slot) {
+        counts[slot.timeRange] = (counts[slot.timeRange] || 0) + 1;
+      }
+    });
+    return timeOrder.map(time => ({ name: time, total: counts[time] }));
+  }, [playSignUps]);
 
   const mostPopularCourt = useMemo(() => {
     if (bookingsPerCourt.length === 0) return "N/A";
@@ -291,61 +279,33 @@ export default function AdminDashboardPage() {
       {/* Charts Section */}
       <section className="space-y-8">
         <div>
-            <h2 className="text-2xl font-semibold tracking-tight mb-4 text-primary/90">Atividade de Reservas</h2>
+            <h2 className="text-2xl font-semibold tracking-tight mb-4 text-primary/90">Atividade de Aulas</h2>
             <p className="text-sm text-muted-foreground mb-4">Exibindo dados para o período: {dateRangeLabel}</p>
             <div className="grid gap-8 md:grid-cols-2">
             <Card className="shadow-md hover:shadow-lg transition-shadow">
               <CardHeader>
-                <CardTitle>Reservas por Quadra (Total)</CardTitle>
-                <CardDescription>Distribuição total de reservas entre as quadras.</CardDescription>
+                <CardTitle>Inscrições por Horário (Total)</CardTitle>
+                <CardDescription>Distribuição total de inscrições por horário das aulas.</CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={bookingsPerCourt}>
+                  <BarChart data={playSignUpsPerTime}>
                     <CartesianGrid strokeDasharray="3 3" opacity={0.5}/>
-                    <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                    <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false}/>
                     <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false}/>
-                    <Tooltip 
+                    <Tooltip
                         contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: 'var(--radius)'}}
                         labelStyle={{ color: 'hsl(var(--foreground))' }}
-                        itemStyle={{ color: chartPrimaryFill }}
+                        itemStyle={{ color: chartAccentFill }}
                     />
                     <Legend wrapperStyle={{fontSize: '12px'}}/>
-                    <Bar dataKey="total" fill={chartPrimaryFill} name="Total de Reservas" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="total" fill={chartAccentFill} name="Inscrições" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
 
             <Card className="shadow-md hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle>Reservas no Período Selecionado</CardTitle>
-                 <CardDescription>Volume de reservas de quadra dia a dia no período.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={bookingsLastPeriod}>
-                    <CartesianGrid strokeDasharray="3 3" opacity={0.5}/>
-                    <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false}/>
-                    <Tooltip 
-                        contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: 'var(--radius)'}}
-                        labelStyle={{ color: 'hsl(var(--foreground))' }}
-                        itemStyle={{ color: chartPrimaryFill }}
-                    />
-                    <Legend wrapperStyle={{fontSize: '12px'}}/>
-                    <Line type="monotone" dataKey="count" stroke={chartPrimaryFill} name="Reservas" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }}/>
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-            </div>
-        </div>
-        
-        <div>
-            <h2 className="text-2xl font-semibold tracking-tight mb-4 text-primary/90">Atividade de Aulas</h2>
-            <p className="text-sm text-muted-foreground mb-4">Exibindo dados para o período: {dateRangeLabel}</p>
-             <Card className="shadow-md hover:shadow-lg transition-shadow">
               <CardHeader>
                 <CardTitle>Inscrições nas Aulas no Período Selecionado</CardTitle>
                 <CardDescription>Volume de inscrições nas aulas no período.</CardDescription>
@@ -354,9 +314,9 @@ export default function AdminDashboardPage() {
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={playSignUpsLastPeriod}>
                     <CartesianGrid strokeDasharray="3 3" opacity={0.5}/>
-                    <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                    <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false}/>
                     <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false}/>
-                     <Tooltip 
+                     <Tooltip
                         contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: 'var(--radius)'}}
                         labelStyle={{ color: 'hsl(var(--foreground))' }}
                         itemStyle={{ color: chartAccentFill }}
@@ -367,6 +327,7 @@ export default function AdminDashboardPage() {
                 </ResponsiveContainer>
               </CardContent>
             </Card>
+            </div>
         </div>
       </section>
 
