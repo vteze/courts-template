@@ -59,6 +59,7 @@ export function AvailabilityCalendar({
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
+  const [now, setNow] = useState(new Date());
   
   const { currentUser, bookings, playSignUps, isLoading: authIsLoading, signUpForPlaySlot, cancelPlaySlotSignUp } = useAuth();
   const router = useRouter();
@@ -71,8 +72,14 @@ export function AvailabilityCalendar({
   };
 
   useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
     if (currentSelectedDate && !authIsLoading) {
       const formattedSelectedDate = format(currentSelectedDate, 'yyyy-MM-dd');
+      const isToday = formattedSelectedDate === format(now, 'yyyy-MM-dd');
       const slots = availableTimeSlots.map(slotTime => {
         const isBookedByRegularBooking = bookings.some(
           booking =>
@@ -81,18 +88,21 @@ export function AvailabilityCalendar({
             booking.time === slotTime
         );
         const isDuringPlayTime = isTimeInPlaySession(currentSelectedDate, slotTime, playSlotsConfig);
-        
+        const slotDateTime = new Date(`${formattedSelectedDate}T${slotTime}:00`);
+        const isPast = isToday && slotDateTime <= now;
+
         return {
           time: slotTime,
-          isBooked: isBookedByRegularBooking, 
-          isPlayTime: isDuringPlayTime,     
+          isBooked: isBookedByRegularBooking,
+          isPlayTime: isDuringPlayTime,
+          isPast,
         };
       });
       setTimeSlots(slots);
     } else {
       setTimeSlots([]);
     }
-  }, [currentSelectedDate, court.id, bookings, authIsLoading]);
+  }, [currentSelectedDate, court.id, bookings, authIsLoading, now]);
 
   const handleTimeSlotClick = async (time: string, isPlay: boolean = false) => {
     if (!currentUser) {
@@ -101,6 +111,11 @@ export function AvailabilityCalendar({
     }
     if (!currentSelectedDate) {
       toast({ title: "Erro", description: "Por favor, selecione uma data primeiro.", variant: "destructive" });
+      return;
+    }
+    const slotDateTime = new Date(`${format(currentSelectedDate, 'yyyy-MM-dd')}T${time}:00`);
+    if (slotDateTime <= now) {
+      toast({ variant: 'destructive', title: 'Horário indisponível', description: 'Este horário já passou.' });
       return;
     }
     if (isPlay) {
@@ -193,15 +208,17 @@ export function AvailabilityCalendar({
                       if (slot.isPlayTime) {
                         buttonVariant = meInPlay ? "destructive" : "outline";
                         buttonText = cfg?.timeRange ?? slot.time;
-                        isDisabled = !meInPlay && playFull;
+                        isDisabled = !meInPlay && (playFull || slot.isPast);
                         onClickAction = () => handleTimeSlotClick(slot.time, true);
                         ariaLabel = meInPlay
                           ? `Cancelar inscrição em ${cfg?.timeRange ?? slot.time}`
+                          : slot.isPast
+                          ? `Horário ${cfg?.timeRange ?? slot.time} indisponível`
                           : playFull
                           ? `Horário ${cfg?.timeRange ?? slot.time} esgotado`
                           : `Inscrever-se em ${cfg?.timeRange ?? slot.time}`;
                         IconComponent = null;
-                      } else if (slot.isBooked) {
+                      } else if (slot.isBooked || slot.isPast) {
                         buttonVariant = "destructive";
                         isDisabled = true;
                         ariaLabel = `Horário ${slot.time} indisponível`;
@@ -262,6 +279,8 @@ export function AvailabilityCalendar({
               const list = cfg ? playSignUps.filter(su => su.slotKey === cfg.key && su.date === dateStr && su.time === t) : [];
               const me = list.find(su => su.userId === currentUser?.id);
               const isFull = list.length >= maxParticipantsPerPlaySlot;
+              const slotDateTime = new Date(`${dateStr}T${t}:00`);
+              const isPast = dateStr === format(now, 'yyyy-MM-dd') && slotDateTime <= now;
               return (
                 <div key={t} className="border rounded-md p-2">
                   <div className="flex items-center justify-between mb-2">
@@ -270,20 +289,28 @@ export function AvailabilityCalendar({
                       onClick={() => handleTimeSlotClick(t, true)}
                       className={cn(
                         "font-medium text-left hover:underline",
-                        !me && isFull && "cursor-not-allowed opacity-70"
+                        !me && (isFull || isPast) && "cursor-not-allowed opacity-70"
                       )}
-                      disabled={!me && isFull}
-                      aria-label={me ? `Cancelar inscrição em ${cfg?.timeRange ?? t}` : isFull ? `Horário ${cfg?.timeRange ?? t} esgotado` : `Inscrever-se em ${cfg?.timeRange ?? t}`}
+                      disabled={!me && (isFull || isPast)}
+                      aria-label={
+                        me
+                          ? `Cancelar inscrição em ${cfg?.timeRange ?? t}`
+                          : isPast
+                          ? `Horário ${cfg?.timeRange ?? t} indisponível`
+                          : isFull
+                          ? `Horário ${cfg?.timeRange ?? t} esgotado`
+                          : `Inscrever-se em ${cfg?.timeRange ?? t}`
+                      }
                     >
                       {cfg?.timeRange ?? t}
                     </button>
                     <Button
                       size="sm"
                       variant={me ? "destructive" : "outline"}
-                      disabled={!me && isFull}
+                      disabled={!me && (isFull || isPast)}
                       onClick={() => handleTimeSlotClick(t, true)}
                     >
-                      {me ? "Cancelar" : isFull ? "Esgotado" : "Inscrever-se"}
+                      {me ? "Cancelar" : isFull ? "Esgotado" : isPast ? "Encerrado" : "Inscrever-se"}
                     </Button>
                   </div>
                   <span className="text-sm text-muted-foreground block mb-2">{list.length}/{maxParticipantsPerPlaySlot}</span>
