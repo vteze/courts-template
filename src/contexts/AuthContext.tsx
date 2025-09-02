@@ -475,6 +475,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     try {
+      if (time) {
+        const sessionStart = new Date(`${date}T${time}:00`);
+        if (new Date() >= sessionStart) {
+          toast({ variant: 'destructive', title: 'Horário Indisponível', description: 'Este horário da Aula já passou.' });
+          return Promise.reject(new Error('Horário da aula já passou'));
+        }
+      }
       // Limite semanal por plano
       const planLimit = currentUser.planPerWeek ?? 1;
       const targetDate = parseISO(date);

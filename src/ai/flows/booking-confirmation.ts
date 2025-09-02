@@ -93,7 +93,7 @@ const personalizedBookingConfirmationFlow = ai.defineFlow(
     inputSchema: PersonalizedBookingConfirmationInputSchema,
     outputSchema: PersonalizedBookingConfirmationOutputSchema,
   },
-  async input => {
+  async (input: PersonalizedBookingConfirmationInput) => {
     const response = await bookingConfirmationPrompt(input);
     if (!response.output || !response.output.confirmationMessage || !response.output.emailSubject || !response.output.emailBody) {
       let aiTextResponse = 'N/A';
