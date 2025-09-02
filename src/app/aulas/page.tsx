@@ -10,7 +10,7 @@ import { playSlotsConfig, numberOfWeeksToDisplayPlaySlots, maxParticipantsPerPla
 import type { PlaySlotConfig } from '@/lib/types';
 import { AulaSlotDisplay } from '@/components/aulas/AulaSlotDisplay';
 import { useAuth } from '@/hooks/useAuth';
-import { format, parseISO, startOfDay, addDays, getDay, nextDay as dateFnsNextDay } from 'date-fns';
+import { format, parseISO, startOfDay, addDays, getDay, nextDay as dateFnsNextDay, type Day } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,7 +24,7 @@ interface AulaSlotInstance {
 }
 
 // Função para gerar as próximas N datas para um dia da semana específico
-const getNextOccurrences = (targetDayOfWeek: number, count: number): Array<{ date: string; displayDate: string }> => {
+const getNextOccurrences = (targetDayOfWeek: Day, count: number): Array<{ date: string; displayDate: string }> => {
   const occurrences: Array<{ date: string; displayDate: string }> = [];
   let currentDate = startOfDay(new Date()); // Começa de hoje
 
@@ -52,17 +52,22 @@ const getNextOccurrences = (targetDayOfWeek: number, count: number): Array<{ dat
 function AulasPage() {
   const { playSignUps, currentUser, isLoading: authLoading } = useAuth();
   const [isClient, setIsClient] = useState(false);
+  const [now, setNow] = useState(new Date());
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
+  useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 60000);
+    return () => clearInterval(interval);
+  }, []);
+
   const chronologicallySortedPlaySlots = useMemo(() => {
-    const now = new Date(); // Hora atual no fuso horário do cliente
     const allUpcomingSlots: AulaSlotInstance[] = [];
 
     playSlotsConfig.forEach(slot => {
-      const occurrences = getNextOccurrences(slot.dayOfWeek, numberOfWeeksToDisplayPlaySlots);
+      const occurrences = getNextOccurrences(slot.dayOfWeek as Day, numberOfWeeksToDisplayPlaySlots);
       const startTime = slot.timeRange.split(' - ')[0]; // ex: "16:00"
 
       occurrences.forEach(occ => {
@@ -92,11 +97,10 @@ function AulasPage() {
     
     return allUpcomingSlots;
 
-  }, [playSignUps]); // Recalcula se playSignUps mudar (indicando potencial mudança de estado ou re-render)
+  }, [playSignUps, now]); // Recalcula se playSignUps ou o tempo atual mudar
 
   const myUpcomingSlots = useMemo(() => {
     if (!currentUser) return [] as AulaSlotInstance[];
-    const now = new Date();
     const mySlots: AulaSlotInstance[] = [];
 
     playSignUps
@@ -125,7 +129,7 @@ function AulasPage() {
     });
 
     return mySlots;
-  }, [playSignUps, currentUser]);
+  }, [playSignUps, currentUser, now]);
 
 
   return (
