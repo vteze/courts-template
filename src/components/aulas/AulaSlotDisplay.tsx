@@ -5,6 +5,7 @@ import type { PlaySignUp, PlaySlotConfig } from '@/lib/types';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Users, UserPlus, UserMinus, Loader2, Trash2 } from 'lucide-react'; // Added Trash2
 import { maxParticipantsPerPlaySlot } from '@/config/appConfig';
@@ -29,9 +30,10 @@ interface AulaSlotDisplayProps {
   date: string; // YYYY-MM-DD (for logic)
   displayDate: string; // dd/MM (for display in title)
   allSignUps: PlaySignUp[]; // Todas as inscrições para filtrar
+  hasStarted: boolean;
 }
 
-export function AulaSlotDisplay({ slotConfig, date, displayDate, allSignUps }: AulaSlotDisplayProps) {
+export function AulaSlotDisplay({ slotConfig, date, displayDate, allSignUps, hasStarted }: AulaSlotDisplayProps) {
   const { currentUser, isAdmin, signUpForPlaySlot, cancelPlaySlotSignUp, isLoading: authLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [signUpToRemove, setSignUpToRemove] = useState<PlaySignUp | null>(null);
@@ -110,21 +112,26 @@ export function AulaSlotDisplay({ slotConfig, date, displayDate, allSignUps }: A
   return (
     <>
     <Card className="shadow-lg">
-      <CardHeader>
-        <CardTitle className="text-xl">{slotConfig.label} - {displayDate}</CardTitle>
-        <CardDescription
-          onClick={() => {
-            if (!currentUser) {
-              router.push('/login');
-            } else if (!currentUserSignUp && !isSlotFull && !isSubmitting && !authLoading) {
-              handleSignUp();
-            }
-          }}
-          className="cursor-pointer hover:underline"
-        >
-          {slotConfig.timeRange}
-        </CardDescription>
-      </CardHeader>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-xl">{slotConfig.label} - {displayDate}</CardTitle>
+            {hasStarted && <Badge variant="destructive">Horário encerrado</Badge>}
+          </div>
+          <CardDescription
+            onClick={() => {
+              if (!hasStarted) {
+                if (!currentUser) {
+                  router.push('/login');
+                } else if (!currentUserSignUp && !isSlotFull && !isSubmitting && !authLoading) {
+                  handleSignUp();
+                }
+              }
+            }}
+            className={hasStarted ? "text-muted-foreground" : "cursor-pointer hover:underline"}
+          >
+            {slotConfig.timeRange}
+          </CardDescription>
+        </CardHeader>
       <CardContent>
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
@@ -171,38 +178,42 @@ export function AulaSlotDisplay({ slotConfig, date, displayDate, allSignUps }: A
         </div>
       </CardContent>
       <CardFooter>
-        {!currentUser ? (
-          <Button asChild className="w-full">
-            <Link href="/login">
-              <UserPlus className="mr-2" />
-              Faça login para se inscrever
-            </Link>
-          </Button>
-        ) : currentUserSignUp ? (
-          <Button
-            variant="destructive"
-            onClick={handleCancelCurrentUserSignUp}
-            disabled={isSubmitting || authLoading}
-            className="w-full"
-          >
-            {isSubmitting ? <Loader2 className="animate-spin mr-2" /> : <UserMinus className="mr-2" />}
-            Cancelar Minha Inscrição
-          </Button>
-        ) : isSlotFull ? (
-          <Button disabled className="w-full">
-            Vagas Esgotadas
-          </Button>
-        ) : (
-          <Button
-            onClick={handleSignUp}
-            disabled={isSubmitting || authLoading}
-            className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
-          >
-            {isSubmitting ? <Loader2 className="animate-spin mr-2" /> : <UserPlus className="mr-2" />}
-            Inscrever-se na Aula
-          </Button>
-        )}
-      </CardFooter>
+          {!currentUser ? (
+            <Button asChild className="w-full">
+              <Link href="/login">
+                <UserPlus className="mr-2" />
+                Faça login para se inscrever
+              </Link>
+            </Button>
+          ) : currentUserSignUp ? (
+            <Button
+              variant="destructive"
+              onClick={handleCancelCurrentUserSignUp}
+              disabled={isSubmitting || authLoading}
+              className="w-full"
+            >
+              {isSubmitting ? <Loader2 className="animate-spin mr-2" /> : <UserMinus className="mr-2" />}
+              Cancelar Minha Inscrição
+            </Button>
+          ) : hasStarted ? (
+            <Button disabled className="w-full">
+              Horário Encerrado
+            </Button>
+          ) : isSlotFull ? (
+            <Button disabled className="w-full">
+              Vagas Esgotadas
+            </Button>
+          ) : (
+            <Button
+              onClick={handleSignUp}
+              disabled={isSubmitting || authLoading}
+              className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
+            >
+              {isSubmitting ? <Loader2 className="animate-spin mr-2" /> : <UserPlus className="mr-2" />}
+              Inscrever-se na Aula
+            </Button>
+          )}
+        </CardFooter>
     </Card>
 
     {isAdmin && signUpToRemove && (

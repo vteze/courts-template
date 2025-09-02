@@ -21,6 +21,7 @@ interface AulaSlotInstance {
   date: string; // YYYY-MM-DD para lógica
   displayDate: string; // DD/MM para exibição
   uniqueKey: string; // Para chaves React
+  hasStarted: boolean; // Indicador se a sessão já iniciou
 }
 
 // Função para gerar as próximas N datas para um dia da semana específico
@@ -74,15 +75,14 @@ function AulasPage() {
         // occ.date é "YYYY-MM-DD"
         const playSessionStartDateTime = new Date(`${occ.date}T${startTime}:00`);
         // Este objeto Date está no fuso horário do cliente, interpretando a string como local.
-
-        if (now < playSessionStartDateTime) { // A sessão só é incluída se a hora atual for ANTES do início da sessão
-          allUpcomingSlots.push({
-            slotConfig: slot,
-            date: occ.date,
-            displayDate: occ.displayDate,
-            uniqueKey: `${slot.key}-${occ.date}`
-          });
-        }
+        const hasStarted = now >= playSessionStartDateTime;
+        allUpcomingSlots.push({
+          slotConfig: slot,
+          date: occ.date,
+          displayDate: occ.displayDate,
+          uniqueKey: `${slot.key}-${occ.date}`,
+          hasStarted,
+        });
       });
     });
 
@@ -116,6 +116,7 @@ function AulasPage() {
             date: signUp.date,
             displayDate: format(parseISO(signUp.date), 'dd/MM', { locale: ptBR }),
             uniqueKey: `${slot.key}-${signUp.date}`,
+            hasStarted: false,
           });
         }
       });
@@ -166,6 +167,7 @@ function AulasPage() {
                 date={slotInstance.date}
                 displayDate={slotInstance.displayDate}
                 allSignUps={playSignUps}
+                hasStarted={slotInstance.hasStarted}
               />
             ))}
           </div>
@@ -203,6 +205,7 @@ function AulasPage() {
                 date={slotInstance.date} // YYYY-MM-DD
                 displayDate={slotInstance.displayDate} // DD/MM
                 allSignUps={playSignUps}
+                hasStarted={slotInstance.hasStarted}
               />
             ))}
           </div>
