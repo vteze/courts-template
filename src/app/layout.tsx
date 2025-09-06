@@ -6,6 +6,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { Toaster } from "@/components/ui/toaster";
 import { cn } from '@/lib/utils';
+import { DateTimeUrlSync } from '@/components/DateTimeUrlSync';
 
 export const metadata: Metadata = {
   title: 'Fúria Treinamentos Futevôlei',
@@ -26,6 +27,7 @@ export default function RootLayout({
     <html lang="pt-BR" suppressHydrationWarning className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <body className={cn("min-h-screen bg-background font-sans antialiased")}>
         <AuthProvider>
+          <DateTimeUrlSync />
           <div className="relative flex min-h-screen flex-col">
             <AppHeader />
             <main className="flex-1 container py-8">
