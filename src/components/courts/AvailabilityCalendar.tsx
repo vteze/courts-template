@@ -80,24 +80,30 @@ export function AvailabilityCalendar({
     if (currentSelectedDate && !authIsLoading) {
       const formattedSelectedDate = format(currentSelectedDate, 'yyyy-MM-dd');
       const isToday = formattedSelectedDate === format(now, 'yyyy-MM-dd');
-      const slots = availableTimeSlots.map(slotTime => {
+      const slots = availableTimeSlots.reduce<TimeSlot[]>((acc, slotTime) => {
+        const isDuringPlayTime = isTimeInPlaySession(currentSelectedDate, slotTime, playSlotsConfig);
+        if (!isDuringPlayTime) {
+          return acc;
+        }
+
         const isBookedByRegularBooking = bookings.some(
-          booking =>
+          (booking) =>
             booking.courtId === court.id &&
             booking.date === formattedSelectedDate &&
             booking.time === slotTime
         );
-        const isDuringPlayTime = isTimeInPlaySession(currentSelectedDate, slotTime, playSlotsConfig);
         const slotDateTime = new Date(`${formattedSelectedDate}T${slotTime}:00`);
         const isPast = isToday && slotDateTime <= now;
 
-        return {
+        acc.push({
           time: slotTime,
           isBooked: isBookedByRegularBooking,
           isPlayTime: isDuringPlayTime,
           isPast,
-        };
-      });
+        });
+
+        return acc;
+      }, []);
       setTimeSlots(slots);
     } else {
       setTimeSlots([]);
@@ -267,12 +273,11 @@ export function AvailabilityCalendar({
           selectedTime={selectedTimeSlot}
         />
       )}
-      {currentSelectedDate && (
+      {currentSelectedDate && timeSlots.length > 0 && (
         <div className="px-6 pb-6">
           <h4 className="text-md font-semibold mb-2">Inscritos por horário</h4>
           <div className="space-y-3">
-            {availableTimeSlots.map(t => {
-              if (!isTimeInPlaySession(currentSelectedDate, t, playSlotsConfig)) return null;
+            {timeSlots.map(({ time: t }) => {
               const dayOfWeek = currentSelectedDate.getDay();
               const cfg = playSlotsConfig.find(s => s.dayOfWeek === dayOfWeek && s.timeRange.startsWith(t));
               const dateStr = format(currentSelectedDate, 'yyyy-MM-dd');
