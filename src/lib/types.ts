@@ -50,6 +50,9 @@ export interface PlaySignUp {
   date: string; // YYYY-MM-DD, specific date of the Aula session
   time?: string; // HH:mm, opcional quando a inscrição é por horário
   signedUpAt: any; // Firestore Timestamp
+  attended?: boolean; // Presença confirmada pelo admin
+  attendanceConfirmedAt?: any; // Firestore Timestamp
+  attendanceConfirmedBy?: string; // UID do admin que confirmou
 }
 
 import type { ReactNode } from "react";
@@ -91,6 +94,7 @@ export interface AuthContextType {
     time?: string
   ) => Promise<void>;
   cancelPlaySlotSignUp: (signUpId: string) => Promise<void>;
+  setPlaySignUpAttendance: (signUpId: string, attended: boolean) => Promise<void>;
   updateUserPlan: (userId: string, planPerWeek: number) => Promise<void>;
   isLoading: boolean;
   authError: string | null;

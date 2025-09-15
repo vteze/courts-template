@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Users, UserPlus, UserMinus, Loader2, Trash2 } from 'lucide-react'; // Added Trash2
+import { Users, UserPlus, UserMinus, Loader2, Trash2, Check, Undo2 } from 'lucide-react'; // Added Trash2
 import { maxParticipantsPerPlaySlot } from '@/config/appConfig';
 import { useState } from 'react';
 import Link from 'next/link';
@@ -34,8 +34,9 @@ interface AulaSlotDisplayProps {
 }
 
 export function AulaSlotDisplay({ slotConfig, date, displayDate, allSignUps, hasStarted }: AulaSlotDisplayProps) {
-  const { currentUser, isAdmin, signUpForPlaySlot, cancelPlaySlotSignUp, isLoading: authLoading } = useAuth();
+  const { currentUser, isAdmin, signUpForPlaySlot, cancelPlaySlotSignUp, setPlaySignUpAttendance, isLoading: authLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [attendanceUpdatingId, setAttendanceUpdatingId] = useState<string | null>(null);
   const [signUpToRemove, setSignUpToRemove] = useState<PlaySignUp | null>(null);
   const router = useRouter();
 
@@ -98,6 +99,18 @@ export function AulaSlotDisplay({ slotConfig, date, displayDate, allSignUps, has
       setIsSubmitting(false);
     }
   };
+
+  const handleAttendanceToggle = async (signUpId: string, newStatus: boolean) => {
+    if (!isAdmin) return;
+    setAttendanceUpdatingId(signUpId);
+    try {
+      await setPlaySignUpAttendance(signUpId, newStatus);
+    } catch (error) {
+      console.error("Erro ao atualizar presença:", error);
+    } finally {
+      setAttendanceUpdatingId(null);
+    }
+  };
   
   const getInitials = (name: string = "") => {
     const nameParts = name.split(' ');
@@ -149,25 +162,55 @@ export function AulaSlotDisplay({ slotConfig, date, displayDate, allSignUps, has
                 <div key={signUp.id} className="flex items-center justify-between gap-2 p-2 border rounded-md bg-muted/50">
                   <div className="flex items-center gap-2 overflow-hidden">
                     <Avatar className="h-8 w-8 flex-shrink-0">
-                      <AvatarImage 
-                          src={`https://placehold.co/40x40.png?text=${getInitials(signUp.userName)}`} 
-                          alt={signUp.userName} 
+                      <AvatarImage
+                          src={`https://placehold.co/40x40.png?text=${getInitials(signUp.userName)}`}
+                          alt={signUp.userName}
                           data-ai-hint="avatar perfil"
                       />
                       <AvatarFallback>{getInitials(signUp.userName)}</AvatarFallback>
                     </Avatar>
-                    <span className="text-sm truncate" title={signUp.userName}>{signUp.userName}</span>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-sm font-medium truncate" title={signUp.userName}>{signUp.userName}</span>
+                      <Badge
+                        variant="outline"
+                        className={`mt-0.5 w-fit text-[11px] font-medium ${signUp.attended ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-dashed border-border text-muted-foreground'}`}
+                      >
+                        {signUp.attended ? 'Presença confirmada' : 'Presença pendente'}
+                      </Badge>
+                    </div>
                   </div>
-                  {isAdmin && currentUser?.id !== signUp.userId && (
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-7 w-7 text-destructive hover:bg-destructive/10"
-                      onClick={() => setSignUpToRemove(signUp)}
-                      aria-label={`Remover ${signUp.userName} desta sessão`}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                  {isAdmin && (
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-emerald-600 hover:bg-emerald-50"
+                        onClick={() => handleAttendanceToggle(signUp.id, !signUp.attended)}
+                        disabled={attendanceUpdatingId === signUp.id}
+                        aria-label={signUp.attended ? `Remover confirmação de presença de ${signUp.userName}` : `Confirmar presença de ${signUp.userName}`}
+                        aria-pressed={signUp.attended ? true : false}
+                        title={signUp.attended ? `Remover confirmação de presença de ${signUp.userName}` : `Confirmar presença de ${signUp.userName}`}
+                      >
+                        {attendanceUpdatingId === signUp.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : signUp.attended ? (
+                          <Undo2 className="h-4 w-4" />
+                        ) : (
+                          <Check className="h-4 w-4" />
+                        )}
+                      </Button>
+                      {currentUser?.id !== signUp.userId && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-destructive hover:bg-destructive/10"
+                          onClick={() => setSignUpToRemove(signUp)}
+                          aria-label={`Remover ${signUp.userName} desta sessão`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
                   )}
                 </div>
               ))}

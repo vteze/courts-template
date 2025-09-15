@@ -573,7 +573,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (!signUpDoc.exists()) {
           throw new Error("Inscrição não encontrada.");
       }
-      
+
       if (isAdmin || signUpDoc.data()?.userId === currentUser.id) {
           await deleteDoc(signUpDocRef);
           toast({ title: "Inscrição Cancelada", description: "A inscrição na Aula foi cancelada." });
@@ -584,6 +584,38 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } catch (error: any) {
       console.error(`Erro ao cancelar inscrição da Aula (ID: ${signUpId}): `, error);
       toast({ variant: "destructive", title: "Falha ao Cancelar Inscrição", description: error.message || "Ocorreu um erro." });
+      throw error;
+    }
+  };
+
+  const setPlaySignUpAttendance = async (signUpId: string, attended: boolean) => {
+    if (!isAdmin) {
+      toast({ variant: "destructive", title: "Não Autorizado", description: "Apenas administradores podem confirmar presença." });
+      return Promise.reject(new Error("Não autorizado."));
+    }
+
+    try {
+      const signUpDocRef = doc(db, PLAY_SIGNUPS_COLLECTION_NAME, signUpId);
+      const updatePayload: Record<string, any> = {
+        attended,
+        attendanceConfirmedAt: attended ? serverTimestamp() : null,
+        attendanceConfirmedBy: attended ? currentUser?.id ?? null : null,
+      };
+
+      await updateDoc(signUpDocRef, updatePayload);
+      toast({
+        title: attended ? "Presença Confirmada" : "Confirmação Removida",
+        description: attended
+          ? "A presença foi confirmada com sucesso."
+          : "A confirmação de presença foi removida.",
+      });
+    } catch (error: any) {
+      console.error(`Erro ao atualizar presença da inscrição ${signUpId}:`, error);
+      toast({
+        variant: "destructive",
+        title: "Falha ao Atualizar Presença",
+        description: error.message || "Não foi possível atualizar a presença do aluno.",
+      });
       throw error;
     }
   };
@@ -637,6 +669,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       updateBookingByAdmin,
       signUpForPlaySlot,
       cancelPlaySlotSignUp,
+      setPlaySignUpAttendance,
       updateUserPlan,
       isLoading,
       authError,
