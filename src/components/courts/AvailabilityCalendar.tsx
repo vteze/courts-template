@@ -6,7 +6,7 @@ import { ptBR } from 'date-fns/locale';
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { Court, TimeSlot, PlaySlotConfig, PlaySignUp } from '@/lib/types';
+import type { Court, TimeSlot, PlaySlotConfig } from '@/lib/types';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { availableTimeSlots, playSlotsConfig, maxParticipantsPerPlaySlot } from '@/config/appConfig';
@@ -61,7 +61,13 @@ export function AvailabilityCalendar({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
   const [now, setNow] = useState(new Date());
-  
+  const isCourtFullyBooked = court.isFullyBooked;
+  const soldOutMessage = court.soldOutMessage ?? 'Todos os horários já reservados no momento.';
+  const showcaseTimeSlots =
+    court.customTimeSlots && court.customTimeSlots.length > 0
+      ? court.customTimeSlots
+      : availableTimeSlots;
+
   const { currentUser, bookings, playSignUps, isLoading: authIsLoading, signUpForPlaySlot, cancelPlaySlotSignUp } = useAuth();
   const router = useRouter();
 
@@ -78,6 +84,11 @@ export function AvailabilityCalendar({
   }, []);
 
   useEffect(() => {
+    if (court.isFullyBooked) {
+      setTimeSlots([]);
+      return;
+    }
+
     if (currentSelectedDate && !authIsLoading) {
       const formattedSelectedDate = format(currentSelectedDate, 'yyyy-MM-dd');
       const isToday = formattedSelectedDate === format(now, 'yyyy-MM-dd');
@@ -109,7 +120,7 @@ export function AvailabilityCalendar({
     } else {
       setTimeSlots([]);
     }
-  }, [currentSelectedDate, court.id, bookings, authIsLoading, now]);
+  }, [currentSelectedDate, court.id, bookings, authIsLoading, now, court.isFullyBooked]);
 
   const handleTimeSlotClick = async (time: string, isPlay: boolean = false) => {
     if (!currentUser) {
@@ -166,6 +177,43 @@ export function AvailabilityCalendar({
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  if (isCourtFullyBooked) {
+    return (
+      <Card className={cn(className)}>
+        <CardHeader>
+          <CardTitle className="text-xl">Agenda indisponível para {court.name}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Horários Esgotados</AlertTitle>
+            <AlertDescription>{soldOutMessage}</AlertDescription>
+          </Alert>
+          {showcaseTimeSlots.length > 0 && (
+            <>
+              <p className="text-sm text-muted-foreground">
+                Horários habituais desta unidade (no momento todos reservados):
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                {showcaseTimeSlots.map((slot) => (
+                  <Button
+                    key={slot}
+                    variant="destructive"
+                    disabled
+                    className="w-full cursor-not-allowed opacity-80"
+                    aria-label={`Horário ${slot} indisponível`}
+                  >
+                    {slot}
+                  </Button>
+                ))}
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className={cn(className)}>
       <CardHeader>
@@ -216,8 +264,6 @@ export function AvailabilityCalendar({
                       : [];
                     const meInPlay = playList.find((su) => su.userId === currentUser?.id);
                     const playFull = playList.length >= maxParticipantsPerPlaySlot;
-                    const slotIsPast = Boolean(slot.isPast);
-
                       if (slot.isPlayTime) {
                         buttonVariant = meInPlay ? "destructive" : "outline";
                         buttonText = cfg?.timeRange ?? slot.time;
