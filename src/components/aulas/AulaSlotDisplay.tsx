@@ -53,6 +53,14 @@ export function AulaSlotDisplay({ slotConfig, date, displayDate, allSignUps, has
 
   const isSlotFull = relevantSignUps.length >= maxParticipantsPerPlaySlot;
 
+  const experimentalSignUpsForUser = currentUser
+    ? allSignUps.filter((signUp) => signUp.userId === currentUser.id && signUp.isExperimental)
+    : [];
+  const hasExperimentalElsewhere = experimentalSignUpsForUser.some(
+    (signUp) => signUp.id !== currentUserSignUp?.id
+  );
+  const experimentalOptionAvailable = !hasExperimentalElsewhere;
+
   useEffect(() => {
     if (currentUserSignUp) {
       setWantsExperimental(currentUserSignUp.isExperimental ?? false);
@@ -60,6 +68,12 @@ export function AulaSlotDisplay({ slotConfig, date, displayDate, allSignUps, has
       setWantsExperimental(false);
     }
   }, [currentUserSignUp]);
+
+  useEffect(() => {
+    if (!experimentalOptionAvailable && wantsExperimental) {
+      setWantsExperimental(false);
+    }
+  }, [experimentalOptionAvailable, wantsExperimental]);
 
   const handleSignUp = async () => {
     if (!currentUser) {
@@ -69,6 +83,7 @@ export function AulaSlotDisplay({ slotConfig, date, displayDate, allSignUps, has
     setIsSubmitting(true);
     try {
       const startTime = slotConfig.timeRange.split(' - ')[0];
+      const shouldUseExperimental = experimentalOptionAvailable && wantsExperimental;
       await signUpForPlaySlot(
         slotConfig.key,
         date,
@@ -79,7 +94,7 @@ export function AulaSlotDisplay({ slotConfig, date, displayDate, allSignUps, has
         },
         {
           time: startTime,
-          isExperimental: wantsExperimental,
+          isExperimental: shouldUseExperimental,
         }
       );
     } catch (error) {
@@ -239,7 +254,7 @@ export function AulaSlotDisplay({ slotConfig, date, displayDate, allSignUps, has
                   id={`experimental-${slotConfig.key}-${date}`}
                   checked={wantsExperimental}
                   onCheckedChange={(checked) => setWantsExperimental(checked === true)}
-                  disabled={isSubmitting || authLoading}
+                  disabled={isSubmitting || authLoading || !experimentalOptionAvailable}
                   aria-label="Marcar inscrição como aula experimental"
                 />
                 <div className="space-y-1 text-left">
@@ -247,7 +262,9 @@ export function AulaSlotDisplay({ slotConfig, date, displayDate, allSignUps, has
                     Marcar como aula experimental
                   </Label>
                   <p className="text-xs text-muted-foreground">
-                    Ideal para a primeira participação. Não conta no limite semanal de treinos.
+                    {experimentalOptionAvailable
+                      ? 'Ideal para a primeira participação. Não conta no limite semanal de treinos.'
+                      : 'Você já utilizou a opção de aula experimental. Continue com a inscrição regular.'}
                   </p>
                 </div>
               </div>

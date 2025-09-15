@@ -527,6 +527,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return;
       }
 
+      if (isExperimental) {
+        const userSignUpsQuery = query(
+          collection(db, PLAY_SIGNUPS_COLLECTION_NAME),
+          where("userId", "==", currentUser.id)
+        );
+        const userSignUpsSnapshot = await getDocs(userSignUpsQuery);
+        const hasExperimentalSignUp = userSignUpsSnapshot.docs.some((docSnap) => {
+          const data = docSnap.data() as PlaySignUp;
+          if (!data.isExperimental) return false;
+          if (data.slotKey !== slotKey || data.date !== date) return true;
+          if (!time && !data.time) return false;
+          if (time && data.time === time) return false;
+          return true;
+        });
+
+        if (hasExperimentalSignUp) {
+          toast({
+            variant: "destructive",
+            title: "Aula experimental já utilizada",
+            description: "Você já utilizou sua aula experimental. Faça a inscrição regular para continuar.",
+          });
+          return Promise.reject(new Error("Usuário já possui aula experimental."));
+        }
+      }
+
       let allSignUpsForSlotQuery;
       if (time) {
         allSignUpsForSlotQuery = query(
