@@ -7,9 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { Users, UserPlus, UserMinus, Loader2, Trash2 } from 'lucide-react'; // Added Trash2
 import { maxParticipantsPerPlaySlot } from '@/config/appConfig';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -37,6 +39,7 @@ export function AulaSlotDisplay({ slotConfig, date, displayDate, allSignUps, has
   const { currentUser, isAdmin, signUpForPlaySlot, cancelPlaySlotSignUp, isLoading: authLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [signUpToRemove, setSignUpToRemove] = useState<PlaySignUp | null>(null);
+  const [wantsExperimental, setWantsExperimental] = useState(false);
   const router = useRouter();
 
 
@@ -50,6 +53,28 @@ export function AulaSlotDisplay({ slotConfig, date, displayDate, allSignUps, has
 
   const isSlotFull = relevantSignUps.length >= maxParticipantsPerPlaySlot;
 
+  const experimentalSignUpsForUser = currentUser
+    ? allSignUps.filter((signUp) => signUp.userId === currentUser.id && signUp.isExperimental)
+    : [];
+  const hasExperimentalElsewhere = experimentalSignUpsForUser.some(
+    (signUp) => signUp.id !== currentUserSignUp?.id
+  );
+  const experimentalOptionAvailable = !hasExperimentalElsewhere;
+
+  useEffect(() => {
+    if (currentUserSignUp) {
+      setWantsExperimental(currentUserSignUp.isExperimental ?? false);
+    } else {
+      setWantsExperimental(false);
+    }
+  }, [currentUserSignUp]);
+
+  useEffect(() => {
+    if (!experimentalOptionAvailable && wantsExperimental) {
+      setWantsExperimental(false);
+    }
+  }, [experimentalOptionAvailable, wantsExperimental]);
+
   const handleSignUp = async () => {
     if (!currentUser) {
       router.push('/login');
@@ -57,6 +82,8 @@ export function AulaSlotDisplay({ slotConfig, date, displayDate, allSignUps, has
     }
     setIsSubmitting(true);
     try {
+      const startTime = slotConfig.timeRange.split(' - ')[0];
+      const shouldUseExperimental = experimentalOptionAvailable && wantsExperimental;
       await signUpForPlaySlot(
         slotConfig.key,
         date,
@@ -65,7 +92,10 @@ export function AulaSlotDisplay({ slotConfig, date, displayDate, allSignUps, has
           userName: currentUser.name,
           userEmail: currentUser.email,
         },
-        slotConfig.timeRange.split(' - ')[0]
+        {
+          time: startTime,
+          isExperimental: shouldUseExperimental,
+        }
       );
     } catch (error) {
       console.error("Erro no handleSignUp:", error);
@@ -149,19 +179,26 @@ export function AulaSlotDisplay({ slotConfig, date, displayDate, allSignUps, has
                 <div key={signUp.id} className="flex items-center justify-between gap-2 p-2 border rounded-md bg-muted/50">
                   <div className="flex items-center gap-2 overflow-hidden">
                     <Avatar className="h-8 w-8 flex-shrink-0">
-                      <AvatarImage 
-                          src={`https://placehold.co/40x40.png?text=${getInitials(signUp.userName)}`} 
-                          alt={signUp.userName} 
+                      <AvatarImage
+                          src={`https://placehold.co/40x40.png?text=${getInitials(signUp.userName)}`}
+                          alt={signUp.userName}
                           data-ai-hint="avatar perfil"
                       />
                       <AvatarFallback>{getInitials(signUp.userName)}</AvatarFallback>
                     </Avatar>
-                    <span className="text-sm truncate" title={signUp.userName}>{signUp.userName}</span>
+                    <div className="flex min-w-0 flex-col">
+                      <span className="text-sm truncate" title={signUp.userName}>{signUp.userName}</span>
+                      {signUp.isExperimental && (
+                        <Badge variant="outline" className="mt-1 w-fit text-[10px] uppercase tracking-wide">
+                          Experimental
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                   {isAdmin && currentUser?.id !== signUp.userId && (
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       className="h-7 w-7 text-destructive hover:bg-destructive/10"
                       onClick={() => setSignUpToRemove(signUp)}
                       aria-label={`Remover ${signUp.userName} desta sessão`}
@@ -177,7 +214,7 @@ export function AulaSlotDisplay({ slotConfig, date, displayDate, allSignUps, has
           )}
         </div>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="flex flex-col gap-3">
           {!currentUser ? (
             <Button asChild className="w-full">
               <Link href="/login">
@@ -186,15 +223,22 @@ export function AulaSlotDisplay({ slotConfig, date, displayDate, allSignUps, has
               </Link>
             </Button>
           ) : currentUserSignUp ? (
-            <Button
-              variant="destructive"
-              onClick={handleCancelCurrentUserSignUp}
-              disabled={isSubmitting || authLoading}
-              className="w-full"
-            >
-              {isSubmitting ? <Loader2 className="animate-spin mr-2" /> : <UserMinus className="mr-2" />}
-              Cancelar Minha Inscrição
-            </Button>
+            <>
+              <Button
+                variant="destructive"
+                onClick={handleCancelCurrentUserSignUp}
+                disabled={isSubmitting || authLoading}
+                className="w-full"
+              >
+                {isSubmitting ? <Loader2 className="animate-spin mr-2" /> : <UserMinus className="mr-2" />}
+                Cancelar Minha Inscrição
+              </Button>
+              {currentUserSignUp.isExperimental && (
+                <p className="w-full text-center text-sm text-muted-foreground">
+                  Esta inscrição está marcada como aula experimental.
+                </p>
+              )}
+            </>
           ) : hasStarted ? (
             <Button disabled className="w-full">
               Horário Encerrado
@@ -204,14 +248,35 @@ export function AulaSlotDisplay({ slotConfig, date, displayDate, allSignUps, has
               Vagas Esgotadas
             </Button>
           ) : (
-            <Button
-              onClick={handleSignUp}
-              disabled={isSubmitting || authLoading}
-              className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
-            >
-              {isSubmitting ? <Loader2 className="animate-spin mr-2" /> : <UserPlus className="mr-2" />}
-              Inscrever-se na Aula
-            </Button>
+            <>
+              <div className="flex w-full items-start gap-2 rounded-md border border-dashed border-border/60 bg-muted/20 p-3">
+                <Checkbox
+                  id={`experimental-${slotConfig.key}-${date}`}
+                  checked={wantsExperimental}
+                  onCheckedChange={(checked) => setWantsExperimental(checked === true)}
+                  disabled={isSubmitting || authLoading || !experimentalOptionAvailable}
+                  aria-label="Marcar inscrição como aula experimental"
+                />
+                <div className="space-y-1 text-left">
+                  <Label htmlFor={`experimental-${slotConfig.key}-${date}`} className="text-sm font-medium leading-none">
+                    Marcar como aula experimental
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    {experimentalOptionAvailable
+                      ? 'Ideal para a primeira participação. Não conta no limite semanal de treinos.'
+                      : 'Você já utilizou a opção de aula experimental. Continue com a inscrição regular.'}
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={handleSignUp}
+                disabled={isSubmitting || authLoading}
+                className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
+              >
+                {isSubmitting ? <Loader2 className="animate-spin mr-2" /> : <UserPlus className="mr-2" />}
+                {wantsExperimental ? 'Reservar Aula Experimental' : 'Inscrever-se na Aula'}
+              </Button>
+            </>
           )}
         </CardFooter>
     </Card>
