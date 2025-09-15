@@ -4,6 +4,7 @@ export interface User {
   email: string;
   // Quantidade de treinos permitidos por semana (1,2,3,5)
   planPerWeek?: number;
+  level?: string | null;
 }
 
 export interface Court {
@@ -92,6 +93,7 @@ export interface AuthContextType {
   ) => Promise<void>;
   cancelPlaySlotSignUp: (signUpId: string) => Promise<void>;
   updateUserPlan: (userId: string, planPerWeek: number) => Promise<void>;
+  updateUserLevel: (userId: string, level: string | null) => Promise<void>;
   isLoading: boolean;
   authError: string | null;
   clearAuthError: () => void;
