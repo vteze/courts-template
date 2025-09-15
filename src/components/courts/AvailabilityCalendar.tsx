@@ -6,12 +6,12 @@ import { ptBR } from 'date-fns/locale';
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { Court, TimeSlot, PlaySlotConfig, PlaySignUp } from '@/lib/types';
+import type { Court, TimeSlot, PlaySlotConfig } from '@/lib/types';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { availableTimeSlots, playSlotsConfig, maxParticipantsPerPlaySlot } from '@/config/appConfig';
 import { BookingConfirmationDialog } from '@/components/bookings/BookingConfirmationDialog';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, CalendarX2, Lock } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -61,9 +61,13 @@ export function AvailabilityCalendar({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
   const [now, setNow] = useState(new Date());
-  
+
   const { currentUser, bookings, playSignUps, isLoading: authIsLoading, signUpForPlaySlot, cancelPlaySlotSignUp } = useAuth();
   const router = useRouter();
+
+  const isSoldOut = court.status === 'sold-out';
+  const soldOutTitle = court.soldOutTitle ?? 'Horários Esgotados';
+  const soldOutDescription = court.soldOutDescription ?? 'Todos os horários já reservados no momento.';
 
   const getInitials = (name: string = "") => {
     const parts = name.split(' ').filter(Boolean);
@@ -78,6 +82,11 @@ export function AvailabilityCalendar({
   }, []);
 
   useEffect(() => {
+    if (isSoldOut) {
+      setTimeSlots([]);
+      return;
+    }
+
     if (currentSelectedDate && !authIsLoading) {
       const formattedSelectedDate = format(currentSelectedDate, 'yyyy-MM-dd');
       const isToday = formattedSelectedDate === format(now, 'yyyy-MM-dd');
@@ -109,9 +118,12 @@ export function AvailabilityCalendar({
     } else {
       setTimeSlots([]);
     }
-  }, [currentSelectedDate, court.id, bookings, authIsLoading, now]);
+  }, [currentSelectedDate, court.id, bookings, authIsLoading, now, isSoldOut]);
 
   const handleTimeSlotClick = async (time: string, isPlay: boolean = false) => {
+    if (isSoldOut) {
+      return;
+    }
     if (!currentUser) {
       router.push('/login');
       return;
@@ -165,6 +177,45 @@ export function AvailabilityCalendar({
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+
+  if (isSoldOut) {
+    return (
+      <Card className={cn(className)}>
+        <CardHeader>
+          <CardTitle className="text-xl">Verificar Disponibilidade para {court.name}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <Alert variant="destructive" className="bg-destructive/10 border-destructive/50">
+            <CalendarX2 className="h-5 w-5" />
+            <AlertTitle>{soldOutTitle}</AlertTitle>
+            <AlertDescription>{soldOutDescription}</AlertDescription>
+          </Alert>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground text-center md:text-left">
+              Estes são os horários habituais desta unidade e, no momento, todos já estão reservados.
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+              {availableTimeSlots.map((slot) => (
+                <Button
+                  key={slot}
+                  variant="outline"
+                  disabled
+                  className={cn(
+                    "w-full justify-center border-destructive/60 text-destructive",
+                    "bg-destructive/5"
+                  )}
+                  aria-label={`Horário ${slot} indisponível`}
+                >
+                  <Lock className="mr-2 h-4 w-4" />
+                  {slot}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className={cn(className)}>
