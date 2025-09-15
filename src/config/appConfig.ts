@@ -20,7 +20,7 @@ export const courts: Court[] = [
     name: "Alphaville",
     type: "covered",
     imageUrl:
-      "https://albertimoveis.com.br/realthor/fotos/16079/i30O6P7gB02X7Mcz6v_16079604131c330069.jpg",
+      "https://www.imoveistrade.com.br/fotos/g/i6D5n3t11o15_281165c3dca103736.webp?token=YUhSMGNITTZMeTlqWkc0dWRtbHpkR0ZvYjNOMExtTnZiUzVpY2k5cGJXOTJaV2x6ZEM5MmFYTjBZUzVwYlc5aWFTOW1iM1J2Y3k4eU9ERXhMMmsyUkRWdU0zUXhNVzh4TlY4eU9ERXhOalZqTTJSallURXdNemN6Tmk1cWNHYz0=",
     description:
       "Unidade Alphaville dedicada aos treinos personalizados com toda a estrutura Fúria disponível na região.",
     dataAiHint: "futevolei alphaville",
