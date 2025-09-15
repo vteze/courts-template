@@ -14,6 +14,9 @@ export interface Court {
   imageUrl: string;
   description: string;
   dataAiHint: string;
+  status?: "active" | "sold-out";
+  soldOutTitle?: string;
+  soldOutDescription?: string;
 }
 
 export interface Booking {

@@ -6,19 +6,41 @@ import Link from 'next/link';
 import { courts } from '@/config/appConfig';
 import { CourtCard } from '@/components/courts/CourtCard';
 import { AvailabilityCalendar } from '@/components/courts/AvailabilityCalendar';
-import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { CalendarDays } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function HomePage() {
   const [isClient, setIsClient] = useState(false);
-  // Lifted state for globally selected date, initialized to undefined
-  const [globallySelectedDate, setGloballySelectedDate] = useState<Date | undefined>(undefined);
+  const [activeCourtIndex, setActiveCourtIndex] = useState(0);
+  const [selectedDatesByCourt, setSelectedDatesByCourt] = useState<Record<string, Date | undefined>>({});
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  const totalCourts = courts.length;
+  const normalizedIndex = totalCourts > 0 ? ((activeCourtIndex % totalCourts) + totalCourts) % totalCourts : 0;
+  const currentCourt = totalCourts > 0 ? courts[normalizedIndex] : null;
+  const currentSelectedDate = currentCourt ? selectedDatesByCourt[currentCourt.id] : undefined;
+
+  const goToPreviousCourt = () => {
+    if (totalCourts === 0) return;
+    setActiveCourtIndex((prev) => (prev - 1 + totalCourts) % totalCourts);
+  };
+
+  const goToNextCourt = () => {
+    if (totalCourts === 0) return;
+    setActiveCourtIndex((prev) => (prev + 1) % totalCourts);
+  };
+
+  const handleDateSelect = (date?: Date) => {
+    if (!currentCourt) return;
+    setSelectedDatesByCourt((prev) => ({
+      ...prev,
+      [currentCourt.id]: date,
+    }));
+  };
 
   return (
     <>
@@ -62,22 +84,66 @@ export default function HomePage() {
               Confira os horários e garanta sua vaga.
             </p>
           </div>
-          {courts.map((court, index) => {
-            return (
-              <div key={court.id} className="flex flex-col items-center space-y-6">
-                <CourtCard court={court} className="w-full max-w-3xl" />
-                <AvailabilityCalendar
-                  court={court}
-                  className="w-full max-w-3xl"
-                  currentSelectedDate={globallySelectedDate}
-                  onDateSelect={setGloballySelectedDate}
-                />
-                {index < courts.length - 1 && (
-                  <Separator className="my-8 w-full max-w-3xl" />
-                )}
+          {currentCourt ? (
+            <div className="relative mx-auto w-full max-w-5xl">
+              <div className="flex items-center justify-center gap-3 sm:gap-5">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={goToPreviousCourt}
+                  disabled={totalCourts <= 1}
+                  className="h-10 w-10 rounded-full border-muted-foreground/30 bg-background shadow-sm transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-40 sm:h-12 sm:w-12"
+                  aria-label="Ver quadra anterior"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </Button>
+                <div className="w-full max-w-3xl space-y-6">
+                  <CourtCard court={currentCourt} className="w-full" />
+                  <AvailabilityCalendar
+                    court={currentCourt}
+                    className="w-full"
+                    currentSelectedDate={currentSelectedDate}
+                    onDateSelect={handleDateSelect}
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={goToNextCourt}
+                  disabled={totalCourts <= 1}
+                  className="h-10 w-10 rounded-full border-muted-foreground/30 bg-background shadow-sm transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-40 sm:h-12 sm:w-12"
+                  aria-label="Ver próxima quadra"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </Button>
               </div>
-            );
-          })}
+              {totalCourts > 1 && (
+                <div className="mt-8 flex justify-center gap-2">
+                  {courts.map((court, idx) => (
+                    <button
+                      key={court.id}
+                      type="button"
+                      onClick={() => setActiveCourtIndex(idx)}
+                      className={cn(
+                        "h-2.5 w-2.5 rounded-full border border-transparent transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+                        idx === normalizedIndex
+                          ? "bg-primary"
+                          : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                      )}
+                      aria-label={`Ver ${court.name}`}
+                      aria-current={idx === normalizedIndex ? 'true' : undefined}
+                    >
+                      <span className="sr-only">{court.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="text-center text-muted-foreground">Nenhuma quadra cadastrada no momento.</p>
+          )}
         </section>
       </div>
     </>
