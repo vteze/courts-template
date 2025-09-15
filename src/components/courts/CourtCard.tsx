@@ -3,7 +3,8 @@ import Image from 'next/image';
 import type { Court } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Asterisk } from 'lucide-react'; 
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Asterisk, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface CourtCardProps {
@@ -31,13 +32,19 @@ export function CourtCard({ court, className }: CourtCardProps) {
           {court.name}
           {court.bookingDisabled && (
             <Badge variant="destructive" className="ml-1 text-xs">
-              Agenda completa
+              Horários esgotados
             </Badge>
           )}
         </CardTitle>
         <CardDescription>{court.description}</CardDescription>
-        {court.bookingDisabled && court.bookingDisabledMessage && (
-          <p className="mt-3 text-sm text-muted-foreground">{court.bookingDisabledMessage}</p>
+        {court.bookingDisabled && (
+          <Alert variant="destructive" className="mt-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Todos os horários reservados</AlertTitle>
+            <AlertDescription>
+              {court.bookingDisabledMessage || 'Todos os horários estão esgotados no momento nesta unidade.'}
+            </AlertDescription>
+          </Alert>
         )}
       </CardContent>
     </Card>

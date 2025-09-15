@@ -183,15 +183,6 @@ export function AvailabilityCalendar({
         <CardTitle className="text-xl">Verificar Disponibilidade para {court.name}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {court.bookingDisabled && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Reservas temporariamente indisponíveis</AlertTitle>
-            <AlertDescription>
-              {court.bookingDisabledMessage || 'Em breve abriremos novas vagas para esta unidade.'}
-            </AlertDescription>
-          </Alert>
-        )}
         <div className="flex flex-col md:flex-row gap-6">
           <div className="flex-shrink-0 mx-auto md:mx-0">
             <Calendar
@@ -204,7 +195,24 @@ export function AvailabilityCalendar({
             />
           </div>
           <div className="flex-grow">
-            {currentSelectedDate ? (
+            {court.bookingDisabled ? (
+              <div className="space-y-4">
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Horários esgotados</AlertTitle>
+                  <AlertDescription>
+                    {court.bookingDisabledMessage || 'Todos os horários estão esgotados no momento nesta unidade.'}
+                  </AlertDescription>
+                </Alert>
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Selecione uma Data</AlertTitle>
+                  <AlertDescription>
+                    Escolha uma data no calendário para acompanhar a agenda quando novas vagas forem liberadas.
+                  </AlertDescription>
+                </Alert>
+              </div>
+            ) : currentSelectedDate ? (
               <>
                 <h3 className="text-lg font-semibold mb-3 text-center md:text-left">
                   Horários para {format(currentSelectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}:

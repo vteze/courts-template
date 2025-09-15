@@ -76,33 +76,39 @@ export default function HomePage() {
               Nossas Quadras
             </h2>
             <p className="mt-3 text-lg text-foreground/70">
-              Confira os horários e garanta sua vaga. Use as setas para alternar entre as unidades.
+              Confira os horários e garanta sua vaga. Use as setas laterais para navegar entre as unidades disponíveis.
             </p>
           </div>
           <div className="space-y-6">
-            <div className="flex justify-center sm:justify-end gap-2">
+            <div className="relative mx-auto w-full max-w-5xl">
               <Button
-                variant="outline"
+                type="button"
+                variant="ghost"
                 size="icon"
                 onClick={goToPrevCourt}
                 disabled={!hasPrev}
                 aria-label="Ver quadra anterior"
+                className={cn(
+                  "absolute left-3 top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-border/60 bg-background/80 shadow-lg backdrop-blur transition hover:scale-105 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+                  !hasPrev && "opacity-40"
+                )}
               >
-                <ChevronLeft className="h-5 w-5" />
-                <span className="sr-only">Quadra anterior</span>
+                <ChevronLeft className="h-6 w-6" aria-hidden="true" />
               </Button>
               <Button
-                variant="outline"
+                type="button"
+                variant="ghost"
                 size="icon"
                 onClick={goToNextCourt}
                 disabled={!hasNext}
                 aria-label="Ver próxima quadra"
+                className={cn(
+                  "absolute right-3 top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-border/60 bg-background/80 shadow-lg backdrop-blur transition hover:scale-105 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+                  !hasNext && "opacity-40"
+                )}
               >
-                <ChevronRight className="h-5 w-5" />
-                <span className="sr-only">Próxima quadra</span>
+                <ChevronRight className="h-6 w-6" aria-hidden="true" />
               </Button>
-            </div>
-            <div className="relative mx-auto w-full max-w-5xl">
               <div className="overflow-hidden rounded-xl border border-border/50 bg-background/80 shadow-sm">
                 <div
                   className="flex transition-transform duration-500 ease-in-out"
@@ -126,7 +132,7 @@ export default function HomePage() {
                   })}
                 </div>
               </div>
-              <div className="mt-4 flex justify-center gap-2">
+              <div className="mt-6 flex justify-center gap-2">
                 {courts.map((court, index) => (
                   <button
                     key={court.id}

@@ -17,15 +17,15 @@ export const courts: Court[] = [
   },
   {
     id: "alphaville-court",
-    name: "Alphaville",
+    name: "Refúgio Arena — Alphaville",
     type: "covered",
     imageUrl:
       "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=1200&q=80",
     description:
-      "Estrutura parceira em Alphaville com a mesma qualidade Fúria Treinamentos. Estamos finalizando a abertura das turmas.",
+      "Unidade Alphaville com nova quadra tecnológica Fúria para treinos exclusivos em um ambiente privado.",
     dataAiHint: "futevolei alphaville unidade",
     bookingDisabled: true,
-    bookingDisabledMessage: "Agenda de Alphaville temporariamente indisponível. Novas vagas em breve!",
+    bookingDisabledMessage: "Todos os horários estão esgotados no momento nesta unidade.",
   },
 ];
 
