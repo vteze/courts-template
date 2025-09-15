@@ -30,6 +30,11 @@ export function CourtCard({ court, className }: CourtCardProps) {
           {court.name}
         </CardTitle>
         <CardDescription>{court.description}</CardDescription>
+        {court.availabilityStatus === "sold-out" && (
+          <p className="mt-3 text-sm font-semibold text-destructive">
+            {court.availabilityMessage ?? "Horários esgotados no momento."}
+          </p>
+        )}
       </CardContent>
     </Card>
   );

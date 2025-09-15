@@ -4,22 +4,22 @@
 import type { User, Booking, PlaySignUp, AuthContextType, AuthProviderProps } from '@/lib/types';
 import { parseISO, startOfWeek, endOfWeek } from 'date-fns';
 import { useRouter, usePathname } from 'next/navigation';
-import { createContext, useState, useEffect, useCallback } from 'react';
-import { 
-  onAuthStateChanged, 
-  signOut, 
-  signInWithEmailAndPassword, 
+import { createContext, useState, useEffect, useCallback, useRef } from 'react';
+import {
+  onAuthStateChanged,
+  signOut,
+  signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   updateProfile,
   sendPasswordResetEmail,
-  type User as FirebaseUser
+  type User as FirebaseUser,
+  type Auth,
 } from 'firebase/auth';
-import { auth, db } from '@/lib/firebase';
-import { 
-  collection, 
-  query, 
-  where, 
-  onSnapshot, 
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
   doc, 
   setDoc, 
   serverTimestamp, 
@@ -29,7 +29,9 @@ import {
   getDoc,
   updateDoc,
   Timestamp,
+  type Firestore,
 } from 'firebase/firestore';
+import { getFirebaseAuth, getFirestoreDb, isFirebaseConfigured } from '@/lib/firebase';
 import { useToast } from "@/hooks/use-toast";
 import { maxParticipantsPerPlaySlot } from '@/config/appConfig';
 
@@ -53,9 +55,60 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const pathname = usePathname();
   const { toast } = useToast();
 
+  const firebaseAvailable = isFirebaseConfigured();
+  const authRef = useRef<Auth | null>(null);
+  const dbRef = useRef<Firestore | null>(null);
+
+  const firebaseUnavailableError = {
+    code: 'app/firebase-not-configured',
+    message:
+      'As credenciais do Firebase não estão configuradas. Entre em contato com o suporte para ativar a autenticação e as reservas.',
+  } as const;
+
+  const ensureFirebaseInstances = useCallback(() => {
+    if (!firebaseAvailable || typeof window === 'undefined') {
+      return null;
+    }
+
+    if (!authRef.current) {
+      authRef.current = getFirebaseAuth();
+    }
+
+    if (!dbRef.current) {
+      dbRef.current = getFirestoreDb();
+    }
+
+    return {
+      auth: authRef.current,
+      db: dbRef.current,
+    } as const;
+  }, [firebaseAvailable]);
+
+  const getFirebaseOrThrow = useCallback(() => {
+    const instances = ensureFirebaseInstances();
+    if (!instances) {
+      throw { ...firebaseUnavailableError };
+    }
+
+    return instances;
+  }, [ensureFirebaseInstances]);
+
   const clearAuthError = useCallback(() => setAuthError(null), []);
 
   useEffect(() => {
+    if (!firebaseAvailable) {
+      setIsLoading(false);
+      return;
+    }
+
+    const firebaseInstances = ensureFirebaseInstances();
+    if (!firebaseInstances) {
+      setIsLoading(false);
+      return;
+    }
+
+    const { auth, db } = firebaseInstances;
+
     setIsLoading(true);
     const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
@@ -158,12 +211,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
       unsubscribeBookings();
       unsubscribePlaySignUps();
     };
-  }, [toast]);
+  }, [ensureFirebaseInstances, firebaseAvailable, toast]);
 
   useEffect(() => {
     let unsubscribeUsers: (() => void) | undefined;
 
-    if (isAdmin) {
+    if (!firebaseAvailable) {
+      return;
+    }
+
+    const firebaseInstances = ensureFirebaseInstances();
+    const db = firebaseInstances?.db;
+
+    if (isAdmin && db) {
       const usersColRef = collection(db, USERS_COLLECTION_NAME);
       unsubscribeUsers = onSnapshot(usersColRef, (querySnapshot) => {
         const fetchedUsers: User[] = [];
@@ -195,13 +255,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => {
       if (unsubscribeUsers) unsubscribeUsers();
     };
-  }, [isAdmin, toast]);
+  }, [ensureFirebaseInstances, firebaseAvailable, isAdmin, toast]);
 
 
   const login = async (email: string, pass: string) => {
     setIsLoading(true);
     setAuthError(null);
     try {
+      const { auth } = getFirebaseOrThrow();
       await signInWithEmailAndPassword(auth, email, pass);
       router.push('/');
     } catch (error: any) {
@@ -217,10 +278,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setIsLoading(true);
     setAuthError(null);
     try {
+      const { auth, db } = getFirebaseOrThrow();
       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
       if (userCredential.user) {
         await updateProfile(userCredential.user, { displayName: name });
-        
+
         const userDocRef = doc(db, USERS_COLLECTION_NAME, userCredential.user.uid);
         await setDoc(userDocRef, {
           uid: userCredential.user.uid,
@@ -243,6 +305,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setIsLoading(true);
     setAuthError(null);
     try {
+      const { auth } = getFirebaseOrThrow();
       await signOut(auth);
       router.push('/login');
     } catch (error: any) {
@@ -256,6 +319,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const sendPasswordReset = async (emailAddress: string) => {
     setAuthError(null);
     try {
+      const { auth } = getFirebaseOrThrow();
       await sendPasswordResetEmail(auth, emailAddress);
       toast({
         title: "Link de Redefinição Enviado",
@@ -305,12 +369,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       throw new Error("Tipo da quadra inválido. Deve ser 'covered' ou 'uncovered'.");
     }
     
-    const generatedBookingId = doc(collection(db, RESERVAS_COLLECTION_NAME)).id;
-
     try {
+      const { db } = getFirebaseOrThrow();
+      const generatedBookingId = doc(collection(db, RESERVAS_COLLECTION_NAME)).id;
       const reservasColRef = collection(db, RESERVAS_COLLECTION_NAME);
       console.log(`Verificando conflito (NÃO TRANSACIONAL) na coleção '${RESERVAS_COLLECTION_NAME}'. Critérios: courtId='${courtIdStr}', date='${dateStr}', time='${timeStr}'. GARANTA QUE O ÍNDICE (courtId ASC, date ASC, time ASC, Escopo: Coleção) EXISTE E ESTÁ ATIVO PARA A COLEÇÃO '${RESERVAS_COLLECTION_NAME}'.`);
-      
+
       const conflictQuery = query(
         reservasColRef,
         where("courtId", "==", courtIdStr),
@@ -338,7 +402,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         ...(onBehalfOfName && { onBehalfOf: onBehalfOfName.trim() }),
       };
       console.log(`Nenhum conflito encontrado (NÃO TRANSACIONAL). Tentando salvar nova reserva na coleção '${RESERVAS_COLLECTION_NAME}':`, bookingToSave);
-      
+
       const newBookingDocRef = doc(db, RESERVAS_COLLECTION_NAME, generatedBookingId);
       await setDoc(newBookingDocRef, bookingToSave);
       console.log(`Reserva (NÃO TRANSACIONAL) salva com sucesso na coleção '${RESERVAS_COLLECTION_NAME}'. ID da Reserva:`, generatedBookingId);
@@ -379,6 +443,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return Promise.reject(new Error("Usuário não autenticado"));
     }
     try {
+      const { db } = getFirebaseOrThrow();
       const bookingDocRef = doc(db, RESERVAS_COLLECTION_NAME, bookingId);
       const bookingDocSnap = await getDoc(bookingDocRef);
 
@@ -419,6 +484,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     console.log(`Admin updateBooking. ID: ${bookingId}, New Date: ${newDate}, New Time: ${newTime}, New OnBehalfOf: ${newOnBehalfOfName}`);
 
     try {
+      const { db } = getFirebaseOrThrow();
       const bookingDocRef = doc(db, RESERVAS_COLLECTION_NAME, bookingId);
       const bookingSnap = await getDoc(bookingDocRef);
       if (!bookingSnap.exists()) {
@@ -475,6 +541,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     try {
+      const { db } = getFirebaseOrThrow();
       if (time) {
         const sessionStart = new Date(`${date}T${time}:00`);
         if (new Date() >= sessionStart) {
@@ -568,6 +635,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return Promise.reject(new Error("Usuário não autenticado."));
     }
     try {
+      const { db } = getFirebaseOrThrow();
       const signUpDocRef = doc(db, PLAY_SIGNUPS_COLLECTION_NAME, signUpId);
       const signUpDoc = await getDoc(signUpDocRef);
       if (!signUpDoc.exists()) {
@@ -594,6 +662,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return Promise.reject(new Error("Não autorizado."));
     }
     try {
+      const { db } = getFirebaseOrThrow();
       const userDocRef = doc(db, USERS_COLLECTION_NAME, userId);
       await updateDoc(userDocRef, { planPerWeek });
       toast({ title: "Plano Atualizado", description: "O plano do usuário foi atualizado." });
@@ -667,6 +736,8 @@ function getFirebaseErrorMessage(errorCode: string, defaultMessage: string = "Oc
        return "Credenciais inválidas. Verifique seu email e senha.";
     case "auth/missing-email":
         return "Por favor, insira seu endereço de email.";
+    case "app/firebase-not-configured":
+      return "As credenciais do Firebase não estão configuradas. Entre em contato com o suporte para ativar os recursos.";
     case "permission-denied":
         return "Permissão negada. Verifique as regras de segurança do Firestore e se você está autenticado com as permissões corretas.";
     default:

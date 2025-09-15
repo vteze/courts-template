@@ -13,6 +13,8 @@ export interface Court {
   imageUrl: string;
   description: string;
   dataAiHint: string;
+  availabilityStatus?: "normal" | "sold-out";
+  availabilityMessage?: string;
 }
 
 export interface Booking {
