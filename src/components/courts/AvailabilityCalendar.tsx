@@ -6,7 +6,7 @@ import { ptBR } from 'date-fns/locale';
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { Court, TimeSlot, PlaySlotConfig, PlaySignUp } from '@/lib/types';
+import type { Court, TimeSlot, PlaySlotConfig } from '@/lib/types';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { availableTimeSlots, playSlotsConfig, maxParticipantsPerPlaySlot } from '@/config/appConfig';
@@ -81,6 +81,7 @@ export function AvailabilityCalendar({
     if (currentSelectedDate && !authIsLoading) {
       const formattedSelectedDate = format(currentSelectedDate, 'yyyy-MM-dd');
       const isToday = formattedSelectedDate === format(now, 'yyyy-MM-dd');
+      const disableAllBookings = Boolean(court.bookingDisabled);
       const slots = availableTimeSlots.reduce<TimeSlot[]>((acc, slotTime) => {
         const isDuringPlayTime = isTimeInPlaySession(currentSelectedDate, slotTime, playSlotsConfig);
         if (!isDuringPlayTime) {
@@ -101,6 +102,8 @@ export function AvailabilityCalendar({
           isBooked: isBookedByRegularBooking,
           isPlayTime: isDuringPlayTime,
           isPast,
+          isDisabled: disableAllBookings,
+          disabledReason: court.bookingDisabledMessage,
         });
 
         return acc;
@@ -109,7 +112,7 @@ export function AvailabilityCalendar({
     } else {
       setTimeSlots([]);
     }
-  }, [currentSelectedDate, court.id, bookings, authIsLoading, now]);
+  }, [currentSelectedDate, court.bookingDisabled, court.bookingDisabledMessage, court.id, bookings, authIsLoading, now]);
 
   const handleTimeSlotClick = async (time: string, isPlay: boolean = false) => {
     if (!currentUser) {
@@ -118,6 +121,14 @@ export function AvailabilityCalendar({
     }
     if (!currentSelectedDate) {
       toast({ title: "Erro", description: "Por favor, selecione uma data primeiro.", variant: "destructive" });
+      return;
+    }
+    if (court.bookingDisabled) {
+      toast({
+        variant: 'destructive',
+        title: 'Horário indisponível',
+        description: court.bookingDisabledMessage || 'Esta unidade está com a agenda temporariamente fechada.',
+      });
       return;
     }
     const slotDateTime = new Date(`${format(currentSelectedDate, 'yyyy-MM-dd')}T${time}:00`);
@@ -172,6 +183,15 @@ export function AvailabilityCalendar({
         <CardTitle className="text-xl">Verificar Disponibilidade para {court.name}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
+        {court.bookingDisabled && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Reservas temporariamente indisponíveis</AlertTitle>
+            <AlertDescription>
+              {court.bookingDisabledMessage || 'Em breve abriremos novas vagas para esta unidade.'}
+            </AlertDescription>
+          </Alert>
+        )}
         <div className="flex flex-col md:flex-row gap-6">
           <div className="flex-shrink-0 mx-auto md:mx-0">
             <Calendar
@@ -211,30 +231,37 @@ export function AvailabilityCalendar({
                         (s) => s.dayOfWeek === dayOfWeek && s.timeRange.startsWith(slot.time)
                       );
                       const dateStr = format(currentSelectedDate, 'yyyy-MM-dd');
-                    const playList = cfg
-                      ? playSignUps.filter((su) => su.slotKey === cfg.key && su.date === dateStr && su.time === slot.time)
-                      : [];
-                    const meInPlay = playList.find((su) => su.userId === currentUser?.id);
-                    const playFull = playList.length >= maxParticipantsPerPlaySlot;
-                    const slotIsPast = Boolean(slot.isPast);
+                      const playList = cfg
+                        ? playSignUps.filter((su) => su.slotKey === cfg.key && su.date === dateStr && su.time === slot.time)
+                        : [];
+                      const meInPlay = playList.find((su) => su.userId === currentUser?.id);
+                      const playFull = playList.length >= maxParticipantsPerPlaySlot;
 
                       if (slot.isPlayTime) {
-                        buttonVariant = meInPlay ? "destructive" : "outline";
+                        buttonVariant = meInPlay ? "destructive" : slot.isDisabled ? "destructive" : "outline";
                         buttonText = cfg?.timeRange ?? slot.time;
-                        isDisabled = !meInPlay && (playFull || !!slot.isPast);
+                        const baseDisabled = !meInPlay && (playFull || !!slot.isPast);
+                        isDisabled = slot.isDisabled || baseDisabled;
                         onClickAction = () => handleTimeSlotClick(slot.time, true);
                         ariaLabel = meInPlay
                           ? `Cancelar inscrição em ${cfg?.timeRange ?? slot.time}`
+                          : slot.isDisabled
+                          ? slot.disabledReason
+                            ? `${slot.disabledReason} (${cfg?.timeRange ?? slot.time})`
+                            : `Horário ${cfg?.timeRange ?? slot.time} indisponível`
                           : slot.isPast
                           ? `Horário ${cfg?.timeRange ?? slot.time} indisponível`
                           : playFull
                           ? `Horário ${cfg?.timeRange ?? slot.time} esgotado`
                           : `Inscrever-se em ${cfg?.timeRange ?? slot.time}`;
                         IconComponent = null;
-                      } else if (slot.isBooked || slot.isPast) {
+                      } else if (slot.isBooked || slot.isPast || slot.isDisabled) {
                         buttonVariant = "destructive";
                         isDisabled = true;
-                        ariaLabel = `Horário ${slot.time} indisponível`;
+                        ariaLabel =
+                          slot.isDisabled && slot.disabledReason
+                            ? slot.disabledReason
+                            : `Horário ${slot.time} indisponível`;
                       }
                       return (
                         <Button
@@ -245,7 +272,8 @@ export function AvailabilityCalendar({
                           className={cn(
                             "w-full transition-colors duration-150 ease-in-out group",
                             isDisabled && 'cursor-not-allowed opacity-70',
-                            !slot.isBooked && 'hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground'
+                            !slot.isBooked && !slot.isDisabled &&
+                              'hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground'
                           )}
                           aria-label={ariaLabel}
                         >
@@ -271,7 +299,10 @@ export function AvailabilityCalendar({
           </div>
         </div>
       </CardContent>
-      {currentSelectedDate && selectedTimeSlot && !isTimeInPlaySession(currentSelectedDate, selectedTimeSlot, playSlotsConfig) && (
+      {currentSelectedDate &&
+        selectedTimeSlot &&
+        !court.bookingDisabled &&
+        !isTimeInPlaySession(currentSelectedDate, selectedTimeSlot, playSlotsConfig) && (
         <BookingConfirmationDialog
           isOpen={isDialogOpen}
           onOpenChange={setIsDialogOpen}
@@ -280,7 +311,7 @@ export function AvailabilityCalendar({
           selectedTime={selectedTimeSlot}
         />
       )}
-      {currentSelectedDate && timeSlots.length > 0 && (
+      {currentSelectedDate && timeSlots.length > 0 && !court.bookingDisabled && (
         <div className="px-6 pb-6">
           <h4 className="text-md font-semibold mb-2">Inscritos por horário</h4>
           <div className="space-y-3">

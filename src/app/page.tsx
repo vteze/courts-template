@@ -6,19 +6,36 @@ import Link from 'next/link';
 import { courts } from '@/config/appConfig';
 import { CourtCard } from '@/components/courts/CourtCard';
 import { AvailabilityCalendar } from '@/components/courts/AvailabilityCalendar';
-import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { CalendarDays } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function HomePage() {
   const [isClient, setIsClient] = useState(false);
-  // Lifted state for globally selected date, initialized to undefined
-  const [globallySelectedDate, setGloballySelectedDate] = useState<Date | undefined>(undefined);
+  const [currentCourtIndex, setCurrentCourtIndex] = useState(0);
+  const [selectedDates, setSelectedDates] = useState<Record<string, Date | undefined>>({});
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  const handleDateSelect = (courtId: string, date?: Date) => {
+    setSelectedDates((prev) => ({
+      ...prev,
+      [courtId]: date,
+    }));
+  };
+
+  const goToPrevCourt = () => {
+    setCurrentCourtIndex((prev) => Math.max(prev - 1, 0));
+  };
+
+  const goToNextCourt = () => {
+    setCurrentCourtIndex((prev) => Math.min(prev + 1, courts.length - 1));
+  };
+
+  const hasPrev = currentCourtIndex > 0;
+  const hasNext = currentCourtIndex < courts.length - 1;
 
   return (
     <>
@@ -56,28 +73,76 @@ export default function HomePage() {
         <section id="courts-section" className="space-y-10">
           <div className="text-center mb-10 sm:mb-12"> {/* Adjusted spacing */}
             <h2 className="text-3xl font-bold tracking-tight text-primary sm:text-4xl">
-              Nossa Quadra
+              Nossas Quadras
             </h2>
             <p className="mt-3 text-lg text-foreground/70">
-              Confira os horários e garanta sua vaga.
+              Confira os horários e garanta sua vaga. Use as setas para alternar entre as unidades.
             </p>
           </div>
-          {courts.map((court, index) => {
-            return (
-              <div key={court.id} className="flex flex-col items-center space-y-6">
-                <CourtCard court={court} className="w-full max-w-3xl" />
-                <AvailabilityCalendar
-                  court={court}
-                  className="w-full max-w-3xl"
-                  currentSelectedDate={globallySelectedDate}
-                  onDateSelect={setGloballySelectedDate}
-                />
-                {index < courts.length - 1 && (
-                  <Separator className="my-8 w-full max-w-3xl" />
-                )}
+          <div className="space-y-6">
+            <div className="flex justify-center sm:justify-end gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={goToPrevCourt}
+                disabled={!hasPrev}
+                aria-label="Ver quadra anterior"
+              >
+                <ChevronLeft className="h-5 w-5" />
+                <span className="sr-only">Quadra anterior</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={goToNextCourt}
+                disabled={!hasNext}
+                aria-label="Ver próxima quadra"
+              >
+                <ChevronRight className="h-5 w-5" />
+                <span className="sr-only">Próxima quadra</span>
+              </Button>
+            </div>
+            <div className="relative mx-auto w-full max-w-5xl">
+              <div className="overflow-hidden rounded-xl border border-border/50 bg-background/80 shadow-sm">
+                <div
+                  className="flex transition-transform duration-500 ease-in-out"
+                  style={{ transform: `translateX(-${currentCourtIndex * 100}%)` }}
+                >
+                  {courts.map((court) => {
+                    const selectedDateForCourt = selectedDates[court.id];
+                    return (
+                      <div key={court.id} className="w-full flex-shrink-0 px-4 py-6">
+                        <div className="flex flex-col items-center space-y-6">
+                          <CourtCard court={court} className="w-full max-w-3xl" />
+                          <AvailabilityCalendar
+                            court={court}
+                            className="w-full max-w-3xl"
+                            currentSelectedDate={selectedDateForCourt}
+                            onDateSelect={(date) => handleDateSelect(court.id, date)}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            );
-          })}
+              <div className="mt-4 flex justify-center gap-2">
+                {courts.map((court, index) => (
+                  <button
+                    key={court.id}
+                    type="button"
+                    onClick={() => setCurrentCourtIndex(index)}
+                    className={cn(
+                      "h-2.5 w-2.5 rounded-full transition-colors",
+                      index === currentCourtIndex ? "bg-primary" : "bg-muted"
+                    )}
+                    aria-label={`Ver ${court.name}`}
+                    aria-current={index === currentCourtIndex ? 'true' : undefined}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
         </section>
       </div>
     </>

@@ -14,6 +14,8 @@ export interface Court {
   imageUrl: string;
   description: string;
   dataAiHint: string;
+  bookingDisabled?: boolean;
+  bookingDisabledMessage?: string;
 }
 
 export interface Booking {
@@ -33,6 +35,8 @@ export interface TimeSlot {
   isBooked: boolean;
   isPlayTime?: boolean;
   isPast?: boolean;
+  isDisabled?: boolean;
+  disabledReason?: string;
 }
 
 export interface PlaySlotConfig {

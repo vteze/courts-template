@@ -2,6 +2,7 @@
 import Image from 'next/image';
 import type { Court } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Asterisk } from 'lucide-react'; 
 import { cn } from '@/lib/utils';
 
@@ -28,8 +29,16 @@ export function CourtCard({ court, className }: CourtCardProps) {
         <CardTitle className="flex items-center gap-2 text-2xl mb-2">
           <Asterisk className="h-6 w-6 text-primary" />
           {court.name}
+          {court.bookingDisabled && (
+            <Badge variant="destructive" className="ml-1 text-xs">
+              Agenda completa
+            </Badge>
+          )}
         </CardTitle>
         <CardDescription>{court.description}</CardDescription>
+        {court.bookingDisabled && court.bookingDisabledMessage && (
+          <p className="mt-3 text-sm text-muted-foreground">{court.bookingDisabledMessage}</p>
+        )}
       </CardContent>
     </Card>
   );
