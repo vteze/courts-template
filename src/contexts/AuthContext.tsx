@@ -28,6 +28,7 @@ import {
   getDocs,
   getDoc,
   updateDoc,
+  deleteField,
   Timestamp,
 } from 'firebase/firestore';
 import { useToast } from "@/hooks/use-toast";
@@ -66,11 +67,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
             userName = userDocSnap.data()?.name || userName;
         }
 
+        const userDocData = userDocSnap.exists() ? userDocSnap.data() : undefined;
+
         const user: User = {
           id: firebaseUser.uid,
           email: firebaseUser.email || "",
           name: userName,
-          planPerWeek: (userDocSnap.exists() ? (userDocSnap.data()?.planPerWeek as number | undefined) : undefined) ?? 1,
+          planPerWeek: (userDocData?.planPerWeek as number | undefined) ?? 1,
+          level: (userDocData?.level as string | null | undefined) ?? null,
         };
         setCurrentUser(user);
 
@@ -174,6 +178,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             name: data.name || data.email || "Usuário",
             email: data.email || "",
             planPerWeek: (data.planPerWeek as number | undefined) ?? 1,
+            level: (data.level as string | null | undefined) ?? null,
           });
         });
         setUsers(fetchedUsers);
@@ -224,9 +229,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const userDocRef = doc(db, USERS_COLLECTION_NAME, userCredential.user.uid);
         await setDoc(userDocRef, {
           uid: userCredential.user.uid,
-          name: name,
-          email: email,
+          name,
+          email,
           createdAt: serverTimestamp(),
+          planPerWeek: 1,
+          level: null,
         });
       }
       router.push('/');
@@ -467,7 +474,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
 
-  const signUpForPlaySlot = async (slotKey: string, date: string, userDetails: { userId: string, userName: string, userEmail: string }, time?: string) => {
+  const signUpForPlaySlot = async (
+    slotKey: string,
+    date: string,
+    userDetails: { userId: string; userName: string; userEmail: string },
+    options?: { time?: string; isExperimental?: boolean }
+  ) => {
+    const { time, isExperimental = false } = options ?? {};
     if (!currentUser || currentUser.id !== userDetails.userId) {
       toast({ variant: "destructive", title: "Não Autenticado", description: "Ação não permitida ou dados do usuário inconsistentes." });
       router.push('/login');
@@ -489,6 +502,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const weekEnd = endOfWeek(targetDate, { weekStartsOn: 1 });
       const mySignUpsThisWeek = playSignUps.filter(su => {
         if (su.userId !== currentUser.id) return false;
+        if (su.isExperimental) return false;
         const suDate = parseISO(su.date);
         return suDate >= weekStart && suDate <= weekEnd;
       }).length;
@@ -520,6 +534,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return;
       }
 
+      if (isExperimental) {
+        const userSignUpsQuery = query(
+          collection(db, PLAY_SIGNUPS_COLLECTION_NAME),
+          where("userId", "==", currentUser.id)
+        );
+        const userSignUpsSnapshot = await getDocs(userSignUpsQuery);
+        const hasExperimentalSignUp = userSignUpsSnapshot.docs.some((docSnap) => {
+          const data = docSnap.data() as PlaySignUp;
+          if (!data.isExperimental) return false;
+          if (data.slotKey !== slotKey || data.date !== date) return true;
+          if (!time && !data.time) return false;
+          if (time && data.time === time) return false;
+          return true;
+        });
+
+        if (hasExperimentalSignUp) {
+          toast({
+            variant: "destructive",
+            title: "Aula experimental já utilizada",
+            description: "Você já utilizou sua aula experimental. Faça a inscrição regular para continuar.",
+          });
+          return Promise.reject(new Error("Usuário já possui aula experimental."));
+        }
+      }
+
       let allSignUpsForSlotQuery;
       if (time) {
         allSignUpsForSlotQuery = query(
@@ -548,13 +587,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
         slotKey: slotKey,
         date: date,
         ...(time ? { time } : {}),
+        isExperimental,
         signedUpAt: Timestamp.now(),
       };
       await addDoc(collection(db, PLAY_SIGNUPS_COLLECTION_NAME), newSignUpData);
-      toast({ title: "Inscrição Confirmada!", description: `Você foi inscrito para a Aula em ${date}.` });
+      const timeLabel = time ? ` às ${time}` : '';
+      toast({
+        title: isExperimental ? "Aula Experimental Confirmada!" : "Inscrição Confirmada!",
+        description: isExperimental
+          ? `Você foi inscrito em uma aula experimental em ${date}${timeLabel}.`
+          : `Você foi inscrito para a Aula em ${date}${timeLabel}.`
+      });
 
-    } catch (error: any)
-{
+    } catch (error: any) {
       console.error(`Erro ao inscrever-se no Aula para slot ${slotKey} em ${date}: `, error);
       toast({ variant: "destructive", title: "Falha na Inscrição da Aula", description: error.message || "Ocorreu um erro ao tentar se inscrever." });
       throw error;
@@ -608,6 +653,30 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const updateUserLevel = async (userId: string, level: string | null) => {
+    if (!isAdmin) {
+      toast({ variant: "destructive", title: "Não Autorizado", description: "Apenas administradores podem alterar níveis." });
+      return Promise.reject(new Error("Não autorizado."));
+    }
+    try {
+      const userDocRef = doc(db, USERS_COLLECTION_NAME, userId);
+      if (level === null) {
+        await updateDoc(userDocRef, { level: deleteField() });
+      } else {
+        await updateDoc(userDocRef, { level });
+      }
+      toast({ title: "Nível Atualizado", description: "O nível do usuário foi atualizado." });
+    } catch (error: any) {
+      console.error(`Erro ao atualizar nível do usuário ${userId}:`, error);
+      toast({
+        variant: "destructive",
+        title: "Falha ao Atualizar Nível",
+        description: getFirebaseErrorMessage(error.code, "Não foi possível atualizar o nível do usuário."),
+      });
+      throw error;
+    }
+  };
+
   useEffect(() => {
     const protectedRoutes = ['/admin'];
     if (!isLoading && !currentUser && protectedRoutes.includes(pathname)) {
@@ -638,6 +707,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       signUpForPlaySlot,
       cancelPlaySlotSignUp,
       updateUserPlan,
+      updateUserLevel,
       isLoading,
       authError,
       clearAuthError

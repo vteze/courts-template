@@ -7,7 +7,7 @@ export const APP_NAME = "Fúria Treinamentos Futevôlei";
 export const courts: Court[] = [
   {
     id: "main-court",
-    name: "Refúgio Arena — Quadra Principal",
+    name: "Refúgio Arena",
     type: "covered",
     imageUrl:
       "https://lh3.googleusercontent.com/p/AF1QipNY9b4RN45xrsy9_66ouZ3YziNstov9vo-1Tpoi=s680-w680-h510-rw",
