@@ -6,19 +6,36 @@ import Link from 'next/link';
 import { courts } from '@/config/appConfig';
 import { CourtCard } from '@/components/courts/CourtCard';
 import { AvailabilityCalendar } from '@/components/courts/AvailabilityCalendar';
-import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { CalendarDays } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function HomePage() {
   const [isClient, setIsClient] = useState(false);
   // Lifted state for globally selected date, initialized to undefined
   const [globallySelectedDate, setGloballySelectedDate] = useState<Date | undefined>(undefined);
+  const [activeCourtIndex, setActiveCourtIndex] = useState(0);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  const handlePrevCourt = () => {
+    if (courts.length <= 1) return;
+    setActiveCourtIndex((prevIndex) => (prevIndex - 1 + courts.length) % courts.length);
+  };
+
+  const handleNextCourt = () => {
+    if (courts.length <= 1) return;
+    setActiveCourtIndex((prevIndex) => (prevIndex + 1) % courts.length);
+  };
+
+  const handleIndicatorClick = (index: number) => {
+    if (index < 0 || index >= courts.length) return;
+    setActiveCourtIndex(index);
+  };
+
+  const activeCourt = courts[activeCourtIndex] ?? courts[0];
 
   return (
     <>
@@ -56,28 +73,75 @@ export default function HomePage() {
         <section id="courts-section" className="space-y-10">
           <div className="text-center mb-10 sm:mb-12"> {/* Adjusted spacing */}
             <h2 className="text-3xl font-bold tracking-tight text-primary sm:text-4xl">
-              Nossa Quadra
+              {courts.length > 1 ? 'Nossas Quadras' : 'Nossa Quadra'}
             </h2>
             <p className="mt-3 text-lg text-foreground/70">
               Confira os horários e garanta sua vaga.
             </p>
           </div>
-          {courts.map((court, index) => {
-            return (
-              <div key={court.id} className="flex flex-col items-center space-y-6">
-                <CourtCard court={court} className="w-full max-w-3xl" />
-                <AvailabilityCalendar
-                  court={court}
-                  className="w-full max-w-3xl"
-                  currentSelectedDate={globallySelectedDate}
-                  onDateSelect={setGloballySelectedDate}
-                />
-                {index < courts.length - 1 && (
-                  <Separator className="my-8 w-full max-w-3xl" />
+          {activeCourt ? (
+            <div className="space-y-6">
+              <div className="relative w-full max-w-3xl mx-auto">
+                {courts.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 z-10 rounded-full shadow-md"
+                    onClick={handlePrevCourt}
+                    aria-label="Ver quadra anterior"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                    <span className="sr-only">Ver quadra anterior</span>
+                  </Button>
+                )}
+                <div className="space-y-6">
+                  <CourtCard court={activeCourt} className="w-full" />
+                  <AvailabilityCalendar
+                    key={activeCourt.id}
+                    court={activeCourt}
+                    className="w-full"
+                    currentSelectedDate={globallySelectedDate}
+                    onDateSelect={setGloballySelectedDate}
+                  />
+                </div>
+                {courts.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 z-10 rounded-full shadow-md"
+                    onClick={handleNextCourt}
+                    aria-label="Ver próxima quadra"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                    <span className="sr-only">Ver próxima quadra</span>
+                  </Button>
                 )}
               </div>
-            );
-          })}
+              {courts.length > 1 && (
+                <div className="flex justify-center gap-2">
+                  {courts.map((court, index) => (
+                    <button
+                      key={court.id}
+                      type="button"
+                      onClick={() => handleIndicatorClick(index)}
+                      className={cn(
+                        'h-2 w-10 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary',
+                        index === activeCourtIndex ? 'bg-primary' : 'bg-muted'
+                      )}
+                      aria-label={`Ver ${court.name}`}
+                      aria-current={index === activeCourtIndex}
+                    >
+                      <span className="sr-only">{`Ver ${court.name}`}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="text-center text-muted-foreground">Nenhuma quadra cadastrada no momento.</p>
+          )}
         </section>
       </div>
     </>

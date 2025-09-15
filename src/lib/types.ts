@@ -14,6 +14,9 @@ export interface Court {
   imageUrl: string;
   description: string;
   dataAiHint: string;
+  customTimeSlots?: string[];
+  isFullyBooked?: boolean;
+  soldOutMessage?: string;
 }
 
 export interface Booking {
