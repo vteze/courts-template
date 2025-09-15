@@ -6,12 +6,12 @@ import { ptBR } from 'date-fns/locale';
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { Court, TimeSlot, PlaySlotConfig, PlaySignUp } from '@/lib/types';
+import type { Court, TimeSlot, PlaySlotConfig } from '@/lib/types';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { availableTimeSlots, playSlotsConfig, maxParticipantsPerPlaySlot } from '@/config/appConfig';
 import { BookingConfirmationDialog } from '@/components/bookings/BookingConfirmationDialog';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, CalendarX } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -61,6 +61,9 @@ export function AvailabilityCalendar({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
   const [now, setNow] = useState(new Date());
+
+  const availability = court.availability ?? { status: 'available' };
+  const isFullyBooked = availability.status === 'fully_booked';
   
   const { currentUser, bookings, playSignUps, isLoading: authIsLoading, signUpForPlaySlot, cancelPlaySlotSignUp } = useAuth();
   const router = useRouter();
@@ -78,6 +81,11 @@ export function AvailabilityCalendar({
   }, []);
 
   useEffect(() => {
+    if (isFullyBooked) {
+      setTimeSlots([]);
+      setSelectedTimeSlot(null);
+      return;
+    }
     if (currentSelectedDate && !authIsLoading) {
       const formattedSelectedDate = format(currentSelectedDate, 'yyyy-MM-dd');
       const isToday = formattedSelectedDate === format(now, 'yyyy-MM-dd');
@@ -109,7 +117,7 @@ export function AvailabilityCalendar({
     } else {
       setTimeSlots([]);
     }
-  }, [currentSelectedDate, court.id, bookings, authIsLoading, now]);
+  }, [currentSelectedDate, court.id, bookings, authIsLoading, now, isFullyBooked]);
 
   const handleTimeSlotClick = async (time: string, isPlay: boolean = false) => {
     if (!currentUser) {
@@ -165,6 +173,43 @@ export function AvailabilityCalendar({
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+
+  if (isFullyBooked) {
+    const blockedSlots = availability.timeSlots ?? availableTimeSlots;
+    return (
+      <Card className={cn(className)}>
+        <CardHeader>
+          <CardTitle className="text-xl">Verificar Disponibilidade para {court.name}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <Alert variant="destructive">
+            <CalendarX className="h-4 w-4" />
+            <AlertTitle>{availability.message ?? 'Horários Esgotados'}</AlertTitle>
+            <AlertDescription>
+              {availability.subMessage ?? 'Todos os horários já reservados no momento.'}
+            </AlertDescription>
+          </Alert>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground text-center md:text-left">
+              Confira os horários que já estão reservados:
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+              {blockedSlots.map((slot) => (
+                <Button
+                  key={slot}
+                  variant="outline"
+                  disabled
+                  className="h-10 cursor-not-allowed"
+                >
+                  {slot}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className={cn(className)}>

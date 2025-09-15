@@ -15,6 +15,22 @@ export const courts: Court[] = [
       "Quadra oficial de futevôlei (8m x 16m) na Refúgio Arena, com areia tratada e estrutura confortável.",
     dataAiHint: "futevolei arena refugio",
   },
+  {
+    id: "alphaville",
+    name: "Alphaville",
+    type: "uncovered",
+    imageUrl:
+      "https://images.unsplash.com/photo-1530545233105-6454c54639b6?auto=format&fit=crop&w=1200&q=80",
+    description:
+      "Quadra de futevôlei em Alphaville com ambiente ao ar livre para treinos e jogos exclusivos.",
+    dataAiHint: "futevolei alphaville",
+    availability: {
+      status: "fully_booked",
+      message: "Horários Esgotados",
+      subMessage: "Todos os horários já reservados no momento.",
+      timeSlots: ["10:00", "17:00", "18:00", "19:00", "20:00"],
+    },
+  },
 ];
 
 export const availableTimeSlots: string[] = ["10:00", "17:00", "18:00", "19:00", "20:00"];
