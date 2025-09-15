@@ -15,6 +15,13 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import type { PlaySignUp, User } from '@/lib/types';
@@ -23,20 +30,33 @@ interface ChartData {
   name: string;
   total?: number;
   count?: number;
-  [key: string]: any; 
+  [key: string]: any;
 }
 
+const DEFAULT_LEVEL_OPTIONS = ["Iniciante", "Intermediário", "Avançado", "Profissional"];
+
 export default function AdminDashboardPage() {
-  const { currentUser, isAdmin, bookings, playSignUps, totalUsers, users, updateUserPlan, isLoading: authLoading } = useAuth();
+  const { currentUser, isAdmin, bookings, playSignUps, totalUsers, users, updateUserPlan, updateUserLevel, isLoading: authLoading } = useAuth();
   const router = useRouter();
 
   const [isClient, setIsClient] = useState(false);
   const [startDate, setStartDate] = useState<Date | undefined>(subDays(new Date(), 6));
   const [endDate, setEndDate] = useState<Date | undefined>(new Date());
   const [editedPlans, setEditedPlans] = useState<Record<string, number>>({});
+  const [editedLevels, setEditedLevels] = useState<Record<string, string>>({});
 
   const totalBookings = useMemo(() => bookings.length, [bookings]);
   const totalPlaySignUpsCount = useMemo(() => playSignUps.length, [playSignUps]);
+
+  const levelOptions = useMemo(() => {
+    const uniqueLevels = new Set(DEFAULT_LEVEL_OPTIONS);
+    users.forEach((user) => {
+      if (user.level) {
+        uniqueLevels.add(user.level);
+      }
+    });
+    return Array.from(uniqueLevels);
+  }, [users]);
 
   const bookingsPerCourt: ChartData[] = useMemo(() => {
     return courts.map(court => ({
@@ -96,14 +116,68 @@ export default function AdminDashboardPage() {
   }, [startDate, endDate]);
 
   const handlePlanChange = (userId: string, value: string) => {
-    const plan = parseInt(value);
-    setEditedPlans(prev => ({ ...prev, [userId]: plan }));
+    const plan = parseInt(value, 10);
+    setEditedPlans((prev) => {
+      const next = { ...prev };
+      if (value === '' || Number.isNaN(plan)) {
+        delete next[userId];
+      } else {
+        next[userId] = plan;
+      }
+      return next;
+    });
   };
 
-  const handleSavePlan = async (userId: string) => {
-    const plan = editedPlans[userId];
-    if (!plan || isNaN(plan)) return;
-    await updateUserPlan(userId, plan);
+  const handleLevelChange = (userId: string, value: string) => {
+    setEditedLevels((prev) => ({ ...prev, [userId]: value }));
+  };
+
+  const handleSaveUserSettings = async (userId: string) => {
+    const user = users.find((u) => u.id === userId);
+    if (!user) return;
+
+    const rawPlan = editedPlans[userId];
+    const planHasValue = rawPlan !== undefined && !Number.isNaN(rawPlan);
+    const currentPlan = user.planPerWeek ?? 1;
+    const planToPersist = planHasValue ? rawPlan : currentPlan;
+    const planChanged = planHasValue && planToPersist !== currentPlan;
+
+    const rawLevel = editedLevels[userId];
+    const currentLevelValue = user.level ?? null;
+    const selectedLevelValue = rawLevel ?? (currentLevelValue ?? "not_defined");
+    const levelToPersist = selectedLevelValue === "not_defined" ? null : selectedLevelValue;
+    const levelChanged =
+      rawLevel !== undefined
+        ? currentLevelValue !== levelToPersist
+        : false;
+
+    const operations: Promise<void>[] = [];
+
+    if (planChanged) {
+      operations.push(updateUserPlan(userId, planToPersist));
+    }
+
+    if (levelChanged) {
+      operations.push(updateUserLevel(userId, levelToPersist));
+    }
+
+    if (operations.length === 0) {
+      return;
+    }
+
+    try {
+      await Promise.all(operations);
+      setEditedPlans((prev) => {
+        const { [userId]: _, ...rest } = prev;
+        return rest;
+      });
+      setEditedLevels((prev) => {
+        const { [userId]: _, ...rest } = prev;
+        return rest;
+      });
+    } catch (error) {
+      console.error(`Erro ao atualizar usuário ${userId}:`, error);
+    }
   };
 
   useEffect(() => {
@@ -339,31 +413,64 @@ export default function AdminDashboardPage() {
             <TableRow>
               <TableHead>Nome</TableHead>
               <TableHead>Email</TableHead>
+              <TableHead>Nível</TableHead>
               <TableHead>Plano (treinos/sem)</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map((u: User) => (
-              <TableRow key={u.id}>
-                <TableCell>{u.name}</TableCell>
-                <TableCell>{u.email}</TableCell>
-                <TableCell>
-                  <Input
-                    type="number"
-                    min={1}
-                    value={editedPlans[u.id] ?? u.planPerWeek ?? 1}
-                    onChange={(e) => handlePlanChange(u.id, e.target.value)}
-                    className="w-20"
-                  />
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button size="sm" onClick={() => handleSavePlan(u.id)}>
-                    Salvar
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
+            {users.map((u: User) => {
+              const pendingPlan = editedPlans[u.id];
+              const currentPlan = u.planPerWeek ?? 1;
+              const pendingLevel = editedLevels[u.id];
+              const currentLevelValue = u.level ?? "not_defined";
+              const hasPlanChange =
+                pendingPlan !== undefined &&
+                !Number.isNaN(pendingPlan) &&
+                pendingPlan !== currentPlan;
+              const hasLevelChange =
+                pendingLevel !== undefined && pendingLevel !== currentLevelValue;
+              const hasChanges = hasPlanChange || hasLevelChange;
+
+              return (
+                <TableRow key={u.id}>
+                  <TableCell>{u.name}</TableCell>
+                  <TableCell>{u.email}</TableCell>
+                  <TableCell>
+                    <Select
+                      value={pendingLevel ?? currentLevelValue}
+                      onValueChange={(value) => handleLevelChange(u.id, value)}
+                    >
+                      <SelectTrigger className="w-[200px]">
+                        <SelectValue placeholder="Selecione o nível" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="not_defined">Não definido</SelectItem>
+                        {levelOptions.map((level) => (
+                          <SelectItem key={level} value={level}>
+                            {level}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      type="number"
+                      min={1}
+                      value={pendingPlan ?? currentPlan}
+                      onChange={(e) => handlePlanChange(u.id, e.target.value)}
+                      className="w-24"
+                    />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button size="sm" onClick={() => handleSaveUserSettings(u.id)} disabled={!hasChanges}>
+                      Salvar
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </section>

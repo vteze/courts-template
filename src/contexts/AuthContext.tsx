@@ -28,6 +28,7 @@ import {
   getDocs,
   getDoc,
   updateDoc,
+  deleteField,
   Timestamp,
 } from 'firebase/firestore';
 import { useToast } from "@/hooks/use-toast";
@@ -66,11 +67,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
             userName = userDocSnap.data()?.name || userName;
         }
 
+        const userDocData = userDocSnap.exists() ? userDocSnap.data() : undefined;
+
         const user: User = {
           id: firebaseUser.uid,
           email: firebaseUser.email || "",
           name: userName,
-          planPerWeek: (userDocSnap.exists() ? (userDocSnap.data()?.planPerWeek as number | undefined) : undefined) ?? 1,
+          planPerWeek: (userDocData?.planPerWeek as number | undefined) ?? 1,
+          level: (userDocData?.level as string | null | undefined) ?? null,
         };
         setCurrentUser(user);
 
@@ -174,6 +178,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             name: data.name || data.email || "Usuário",
             email: data.email || "",
             planPerWeek: (data.planPerWeek as number | undefined) ?? 1,
+            level: (data.level as string | null | undefined) ?? null,
           });
         });
         setUsers(fetchedUsers);
@@ -224,9 +229,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const userDocRef = doc(db, USERS_COLLECTION_NAME, userCredential.user.uid);
         await setDoc(userDocRef, {
           uid: userCredential.user.uid,
-          name: name,
-          email: email,
+          name,
+          email,
           createdAt: serverTimestamp(),
+          planPerWeek: 1,
+          level: null,
         });
       }
       router.push('/');
@@ -608,6 +615,30 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const updateUserLevel = async (userId: string, level: string | null) => {
+    if (!isAdmin) {
+      toast({ variant: "destructive", title: "Não Autorizado", description: "Apenas administradores podem alterar níveis." });
+      return Promise.reject(new Error("Não autorizado."));
+    }
+    try {
+      const userDocRef = doc(db, USERS_COLLECTION_NAME, userId);
+      if (level === null) {
+        await updateDoc(userDocRef, { level: deleteField() });
+      } else {
+        await updateDoc(userDocRef, { level });
+      }
+      toast({ title: "Nível Atualizado", description: "O nível do usuário foi atualizado." });
+    } catch (error: any) {
+      console.error(`Erro ao atualizar nível do usuário ${userId}:`, error);
+      toast({
+        variant: "destructive",
+        title: "Falha ao Atualizar Nível",
+        description: getFirebaseErrorMessage(error.code, "Não foi possível atualizar o nível do usuário."),
+      });
+      throw error;
+    }
+  };
+
   useEffect(() => {
     const protectedRoutes = ['/admin'];
     if (!isLoading && !currentUser && protectedRoutes.includes(pathname)) {
@@ -638,6 +669,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       signUpForPlaySlot,
       cancelPlaySlotSignUp,
       updateUserPlan,
+      updateUserLevel,
       isLoading,
       authError,
       clearAuthError
