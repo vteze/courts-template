@@ -6,19 +6,32 @@ import Link from 'next/link';
 import { courts } from '@/config/appConfig';
 import { CourtCard } from '@/components/courts/CourtCard';
 import { AvailabilityCalendar } from '@/components/courts/AvailabilityCalendar';
-import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { CalendarDays } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function HomePage() {
   const [isClient, setIsClient] = useState(false);
+  const [activeCourtIndex, setActiveCourtIndex] = useState(0);
   // Lifted state for globally selected date, initialized to undefined
   const [globallySelectedDate, setGloballySelectedDate] = useState<Date | undefined>(undefined);
+  const hasMultipleCourts = courts.length > 1;
+
+  const goToPreviousCourt = () => {
+    setActiveCourtIndex((prevIndex) => (prevIndex === 0 ? courts.length - 1 : prevIndex - 1));
+  };
+
+  const goToNextCourt = () => {
+    setActiveCourtIndex((prevIndex) => (prevIndex === courts.length - 1 ? 0 : prevIndex + 1));
+  };
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  const sliderStyle = {
+    transform: `translateX(-${activeCourtIndex * 100}%)`,
+  };
 
   return (
     <>
@@ -54,30 +67,71 @@ export default function HomePage() {
         </section>
 
         <section id="courts-section" className="space-y-10">
-          <div className="text-center mb-10 sm:mb-12"> {/* Adjusted spacing */}
+          <div className="text-center mb-10 sm:mb-12">
             <h2 className="text-3xl font-bold tracking-tight text-primary sm:text-4xl">
-              Nossa Quadra
+              Nossas Quadras
             </h2>
             <p className="mt-3 text-lg text-foreground/70">
               Confira os horários e garanta sua vaga.
             </p>
           </div>
-          {courts.map((court, index) => {
-            return (
-              <div key={court.id} className="flex flex-col items-center space-y-6">
-                <CourtCard court={court} className="w-full max-w-3xl" />
-                <AvailabilityCalendar
-                  court={court}
-                  className="w-full max-w-3xl"
-                  currentSelectedDate={globallySelectedDate}
-                  onDateSelect={setGloballySelectedDate}
-                />
-                {index < courts.length - 1 && (
-                  <Separator className="my-8 w-full max-w-3xl" />
-                )}
+          <div className="relative mx-auto w-full max-w-5xl">
+            {hasMultipleCourts && (
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={goToPreviousCourt}
+                className="absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-background/90 shadow-md backdrop-blur"
+                aria-label="Ver quadra anterior"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+            )}
+            <div className="overflow-hidden rounded-2xl border border-border bg-background/60 shadow-sm">
+              <div className="flex transition-transform duration-300 ease-in-out" style={sliderStyle}>
+                {courts.map((court) => (
+                  <div key={court.id} className="w-full flex-shrink-0 px-4 py-6">
+                    <div className="flex flex-col items-center space-y-6">
+                      <CourtCard court={court} className="w-full max-w-3xl" />
+                      <AvailabilityCalendar
+                        court={court}
+                        className="w-full max-w-3xl"
+                        currentSelectedDate={globallySelectedDate}
+                        onDateSelect={setGloballySelectedDate}
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
-            );
-          })}
+            </div>
+            {hasMultipleCourts && (
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={goToNextCourt}
+                className="absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-background/90 shadow-md backdrop-blur"
+                aria-label="Ver próxima quadra"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </Button>
+            )}
+            {hasMultipleCourts && (
+              <div className="mt-6 flex justify-center gap-2">
+                {courts.map((court, index) => (
+                  <button
+                    key={court.id}
+                    type="button"
+                    onClick={() => setActiveCourtIndex(index)}
+                    className={cn(
+                      'h-2 w-8 rounded-full transition-colors',
+                      index === activeCourtIndex ? 'bg-primary' : 'bg-muted'
+                    )}
+                    aria-label={`Ir para ${court.name}`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         </section>
       </div>
     </>

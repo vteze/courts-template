@@ -14,6 +14,7 @@ export interface Court {
   imageUrl: string;
   description: string;
   dataAiHint: string;
+  isFullyBooked?: boolean;
 }
 
 export interface Booking {
