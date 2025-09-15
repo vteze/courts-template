@@ -17,28 +17,10 @@ export const courts: Court[] = [
   },
 ];
 
-export const availableTimeSlots: string[] = ["17:00", "18:00", "19:00"];
+export const availableTimeSlots: string[] = ["10:00", "17:00", "18:00", "19:00", "20:00"];
 
-// Configuração das aulas diárias com três horários de uma hora cada (17h–20h)
+// Configuração das aulas por dia com horários específicos
 export const playSlotsConfig: PlaySlotConfig[] = [
-  {
-    key: "domingo-17",
-    label: "Aula",
-    dayOfWeek: 0,
-    timeRange: "17:00 - 18:00",
-  },
-  {
-    key: "domingo-18",
-    label: "Aula",
-    dayOfWeek: 0,
-    timeRange: "18:00 - 19:00",
-  },
-  {
-    key: "domingo-19",
-    label: "Aula",
-    dayOfWeek: 0,
-    timeRange: "19:00 - 20:00",
-  },
   {
     key: "segunda-17",
     label: "Aula",
@@ -57,21 +39,12 @@ export const playSlotsConfig: PlaySlotConfig[] = [
     dayOfWeek: 1,
     timeRange: "19:00 - 20:00",
   },
-  { key: "terca-17", label: "Aula", dayOfWeek: 2, timeRange: "17:00 - 18:00" },
-  { key: "terca-18", label: "Aula", dayOfWeek: 2, timeRange: "18:00 - 19:00" },
-  { key: "terca-19", label: "Aula", dayOfWeek: 2, timeRange: "19:00 - 20:00" },
-  { key: "quarta-17", label: "Aula", dayOfWeek: 3, timeRange: "17:00 - 18:00" },
   { key: "quarta-18", label: "Aula", dayOfWeek: 3, timeRange: "18:00 - 19:00" },
   { key: "quarta-19", label: "Aula", dayOfWeek: 3, timeRange: "19:00 - 20:00" },
-  { key: "quinta-17", label: "Aula", dayOfWeek: 4, timeRange: "17:00 - 18:00" },
-  { key: "quinta-18", label: "Aula", dayOfWeek: 4, timeRange: "18:00 - 19:00" },
-  { key: "quinta-19", label: "Aula", dayOfWeek: 4, timeRange: "19:00 - 20:00" },
-  { key: "sexta-17", label: "Aula", dayOfWeek: 5, timeRange: "17:00 - 18:00" },
-  { key: "sexta-18", label: "Aula", dayOfWeek: 5, timeRange: "18:00 - 19:00" },
+  { key: "quarta-20", label: "Aula", dayOfWeek: 3, timeRange: "20:00 - 21:00" },
   { key: "sexta-19", label: "Aula", dayOfWeek: 5, timeRange: "19:00 - 20:00" },
-  { key: "sabado-17", label: "Aula", dayOfWeek: 6, timeRange: "17:00 - 18:00" },
-  { key: "sabado-18", label: "Aula", dayOfWeek: 6, timeRange: "18:00 - 19:00" },
-  { key: "sabado-19", label: "Aula", dayOfWeek: 6, timeRange: "19:00 - 20:00" },
+  { key: "sexta-20", label: "Aula", dayOfWeek: 5, timeRange: "20:00 - 21:00" },
+  { key: "sabado-10", label: "Aula", dayOfWeek: 6, timeRange: "10:00 - 11:00" },
 ];
 
 export const numberOfWeeksToDisplayPlaySlots = 4;
