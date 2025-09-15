@@ -20,7 +20,7 @@ export const courts: Court[] = [
     name: "Alphaville",
     type: "covered",
     imageUrl:
-      "https://www.verabernardes.com.br/blog/wp-content/uploads/2022/06/Alphaville-Porto-Alegre-Entrada-do-condominio-07_7.webp",
+      "https://albertimoveis.com.br/realthor/fotos/16079/i30O6P7gB02X7Mcz6v_16079604131c330069.jpg",
     description:
       "Unidade Alphaville dedicada aos treinos personalizados com toda a estrutura Fúria disponível na região.",
     dataAiHint: "futevolei alphaville",
