@@ -11,7 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { availableTimeSlots, playSlotsConfig, maxParticipantsPerPlaySlot } from '@/config/appConfig';
 import { BookingConfirmationDialog } from '@/components/bookings/BookingConfirmationDialog';
-import { AlertCircle, CalendarX2, Lock } from 'lucide-react';
+import { AlertCircle, CalendarX2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -190,28 +190,6 @@ export function AvailabilityCalendar({
             <AlertTitle>{soldOutTitle}</AlertTitle>
             <AlertDescription>{soldOutDescription}</AlertDescription>
           </Alert>
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground text-center md:text-left">
-              Estes são os horários habituais desta unidade e, no momento, todos já estão reservados.
-            </p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-              {availableTimeSlots.map((slot) => (
-                <Button
-                  key={slot}
-                  variant="outline"
-                  disabled
-                  className={cn(
-                    "w-full justify-center border-destructive/60 text-destructive",
-                    "bg-destructive/5"
-                  )}
-                  aria-label={`Horário ${slot} indisponível`}
-                >
-                  <Lock className="mr-2 h-4 w-4" />
-                  {slot}
-                </Button>
-              ))}
-            </div>
-          </div>
         </CardContent>
       </Card>
     );
