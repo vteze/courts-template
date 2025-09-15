@@ -208,7 +208,7 @@ export function AvailabilityCalendar({
                       if (slot.isPlayTime) {
                         buttonVariant = meInPlay ? "destructive" : "outline";
                         buttonText = cfg?.timeRange ?? slot.time;
-                        isDisabled = !meInPlay && (playFull || slot.isPast);
+                        isDisabled = !meInPlay && (playFull || !!slot.isPast);
                         onClickAction = () => handleTimeSlotClick(slot.time, true);
                         ariaLabel = meInPlay
                           ? `Cancelar inscrição em ${cfg?.timeRange ?? slot.time}`
