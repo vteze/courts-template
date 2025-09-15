@@ -7,6 +7,13 @@ export interface User {
   level?: string | null;
 }
 
+export interface CourtAvailability {
+  status: "available" | "fully_booked";
+  message?: string;
+  subMessage?: string;
+  timeSlots?: string[];
+}
+
 export interface Court {
   id: string;
   name: string;
@@ -14,6 +21,7 @@ export interface Court {
   imageUrl: string;
   description: string;
   dataAiHint: string;
+  availability?: CourtAvailability;
 }
 
 export interface Booking {
