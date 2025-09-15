@@ -14,6 +14,7 @@ import { BookingConfirmationDialog } from '@/components/bookings/BookingConfirma
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { toast } from "@/hooks/use-toast";
 
@@ -138,7 +139,12 @@ export function AvailabilityCalendar({
           await cancelPlaySlotSignUp(me.id);
           toast({ title: 'Inscrição removida', description: `Você saiu do horário ${time}.` });
         } else if (!isFull) {
-          await signUpForPlaySlot(slotConfig.key, formattedSelectedDate, { userId: currentUser.id, userName: currentUser.name, userEmail: currentUser.email }, time);
+          await signUpForPlaySlot(
+            slotConfig.key,
+            formattedSelectedDate,
+            { userId: currentUser.id, userName: currentUser.name, userEmail: currentUser.email },
+            { time }
+          );
         } else {
           toast({ variant: 'destructive', title: 'Vagas esgotadas', description: `Não há vagas para ${time}.` });
         }
@@ -199,26 +205,27 @@ export function AvailabilityCalendar({
                         (s) => s.dayOfWeek === dayOfWeek && s.timeRange.startsWith(slot.time)
                       );
                       const dateStr = format(currentSelectedDate, 'yyyy-MM-dd');
-                      const playList = cfg
-                        ? playSignUps.filter((su) => su.slotKey === cfg.key && su.date === dateStr && su.time === slot.time)
-                        : [];
-                      const meInPlay = playList.find((su) => su.userId === currentUser?.id);
-                      const playFull = playList.length >= maxParticipantsPerPlaySlot;
+                    const playList = cfg
+                      ? playSignUps.filter((su) => su.slotKey === cfg.key && su.date === dateStr && su.time === slot.time)
+                      : [];
+                    const meInPlay = playList.find((su) => su.userId === currentUser?.id);
+                    const playFull = playList.length >= maxParticipantsPerPlaySlot;
+                    const slotIsPast = Boolean(slot.isPast);
 
-                      if (slot.isPlayTime) {
-                        buttonVariant = meInPlay ? "destructive" : "outline";
-                        buttonText = cfg?.timeRange ?? slot.time;
-                        isDisabled = !meInPlay && (playFull || slot.isPast);
-                        onClickAction = () => handleTimeSlotClick(slot.time, true);
-                        ariaLabel = meInPlay
-                          ? `Cancelar inscrição em ${cfg?.timeRange ?? slot.time}`
-                          : slot.isPast
-                          ? `Horário ${cfg?.timeRange ?? slot.time} indisponível`
-                          : playFull
-                          ? `Horário ${cfg?.timeRange ?? slot.time} esgotado`
-                          : `Inscrever-se em ${cfg?.timeRange ?? slot.time}`;
-                        IconComponent = null;
-                      } else if (slot.isBooked || slot.isPast) {
+                    if (slot.isPlayTime) {
+                      buttonVariant = meInPlay ? "destructive" : "outline";
+                      buttonText = cfg?.timeRange ?? slot.time;
+                      isDisabled = !meInPlay && (playFull || slotIsPast);
+                      onClickAction = () => handleTimeSlotClick(slot.time, true);
+                      ariaLabel = meInPlay
+                        ? `Cancelar inscrição em ${cfg?.timeRange ?? slot.time}`
+                        : slotIsPast
+                        ? `Horário ${cfg?.timeRange ?? slot.time} indisponível`
+                        : playFull
+                        ? `Horário ${cfg?.timeRange ?? slot.time} esgotado`
+                        : `Inscrever-se em ${cfg?.timeRange ?? slot.time}`;
+                      IconComponent = null;
+                    } else if (slot.isBooked || slotIsPast) {
                         buttonVariant = "destructive";
                         isDisabled = true;
                         ariaLabel = `Horário ${slot.time} indisponível`;
@@ -322,7 +329,14 @@ export function AvailabilityCalendar({
                             <AvatarImage src={`https://placehold.co/40x40.png?text=${getInitials(su.userName)}`} alt={su.userName} />
                             <AvatarFallback>{getInitials(su.userName)}</AvatarFallback>
                           </Avatar>
-                          <span className="text-sm">{su.userName}</span>
+                          <div className="flex min-w-0 flex-col">
+                            <span className="text-sm leading-tight" title={su.userName}>{su.userName}</span>
+                            {su.isExperimental && (
+                              <Badge variant="outline" className="mt-0.5 w-fit text-[10px] uppercase tracking-wide">
+                                Experimental
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>

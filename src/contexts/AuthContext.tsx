@@ -474,7 +474,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
 
-  const signUpForPlaySlot = async (slotKey: string, date: string, userDetails: { userId: string, userName: string, userEmail: string }, time?: string) => {
+  const signUpForPlaySlot = async (
+    slotKey: string,
+    date: string,
+    userDetails: { userId: string; userName: string; userEmail: string },
+    options?: { time?: string; isExperimental?: boolean }
+  ) => {
+    const { time, isExperimental = false } = options ?? {};
     if (!currentUser || currentUser.id !== userDetails.userId) {
       toast({ variant: "destructive", title: "Não Autenticado", description: "Ação não permitida ou dados do usuário inconsistentes." });
       router.push('/login');
@@ -496,6 +502,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const weekEnd = endOfWeek(targetDate, { weekStartsOn: 1 });
       const mySignUpsThisWeek = playSignUps.filter(su => {
         if (su.userId !== currentUser.id) return false;
+        if (su.isExperimental) return false;
         const suDate = parseISO(su.date);
         return suDate >= weekStart && suDate <= weekEnd;
       }).length;
@@ -527,6 +534,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return;
       }
 
+      if (isExperimental) {
+        const userSignUpsQuery = query(
+          collection(db, PLAY_SIGNUPS_COLLECTION_NAME),
+          where("userId", "==", currentUser.id)
+        );
+        const userSignUpsSnapshot = await getDocs(userSignUpsQuery);
+        const hasExperimentalSignUp = userSignUpsSnapshot.docs.some((docSnap) => {
+          const data = docSnap.data() as PlaySignUp;
+          if (!data.isExperimental) return false;
+          if (data.slotKey !== slotKey || data.date !== date) return true;
+          if (!time && !data.time) return false;
+          if (time && data.time === time) return false;
+          return true;
+        });
+
+        if (hasExperimentalSignUp) {
+          toast({
+            variant: "destructive",
+            title: "Aula experimental já utilizada",
+            description: "Você já utilizou sua aula experimental. Faça a inscrição regular para continuar.",
+          });
+          return Promise.reject(new Error("Usuário já possui aula experimental."));
+        }
+      }
+
       let allSignUpsForSlotQuery;
       if (time) {
         allSignUpsForSlotQuery = query(
@@ -555,13 +587,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
         slotKey: slotKey,
         date: date,
         ...(time ? { time } : {}),
+        isExperimental,
         signedUpAt: Timestamp.now(),
       };
       await addDoc(collection(db, PLAY_SIGNUPS_COLLECTION_NAME), newSignUpData);
-      toast({ title: "Inscrição Confirmada!", description: `Você foi inscrito para a Aula em ${date}.` });
+      const timeLabel = time ? ` às ${time}` : '';
+      toast({
+        title: isExperimental ? "Aula Experimental Confirmada!" : "Inscrição Confirmada!",
+        description: isExperimental
+          ? `Você foi inscrito em uma aula experimental em ${date}${timeLabel}.`
+          : `Você foi inscrito para a Aula em ${date}${timeLabel}.`
+      });
 
-    } catch (error: any)
-{
+    } catch (error: any) {
       console.error(`Erro ao inscrever-se no Aula para slot ${slotKey} em ${date}: `, error);
       toast({ variant: "destructive", title: "Falha na Inscrição da Aula", description: error.message || "Ocorreu um erro ao tentar se inscrever." });
       throw error;

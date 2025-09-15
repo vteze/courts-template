@@ -50,6 +50,7 @@ export interface PlaySignUp {
   slotKey: string; // Corresponds to PlaySlotConfig.key
   date: string; // YYYY-MM-DD, specific date of the Aula session
   time?: string; // HH:mm, opcional quando a inscrição é por horário
+  isExperimental?: boolean; // Indica se a inscrição é para aula experimental
   signedUpAt: any; // Firestore Timestamp
 }
 
@@ -89,7 +90,7 @@ export interface AuthContextType {
     slotKey: string,
     date: string,
     userDetails: { userId: string; userName: string; userEmail: string },
-    time?: string
+    options?: { time?: string; isExperimental?: boolean }
   ) => Promise<void>;
   cancelPlaySlotSignUp: (signUpId: string) => Promise<void>;
   updateUserPlan: (userId: string, planPerWeek: number) => Promise<void>;
