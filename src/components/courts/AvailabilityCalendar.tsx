@@ -63,6 +63,7 @@ export function AvailabilityCalendar({
   
   const { currentUser, bookings, playSignUps, isLoading: authIsLoading, signUpForPlaySlot, cancelPlaySlotSignUp } = useAuth();
   const router = useRouter();
+  const isSoldOutCourt = court.availabilityStatus === "sold-out";
 
   const getInitials = (name: string = "") => {
     const parts = name.split(' ').filter(Boolean);
@@ -81,13 +82,17 @@ export function AvailabilityCalendar({
       const formattedSelectedDate = format(currentSelectedDate, 'yyyy-MM-dd');
       const isToday = formattedSelectedDate === format(now, 'yyyy-MM-dd');
       const slots = availableTimeSlots.map(slotTime => {
-        const isBookedByRegularBooking = bookings.some(
-          booking =>
-            booking.courtId === court.id &&
-            booking.date === formattedSelectedDate &&
-            booking.time === slotTime
-        );
-        const isDuringPlayTime = isTimeInPlaySession(currentSelectedDate, slotTime, playSlotsConfig);
+        const isBookedByRegularBooking =
+          isSoldOutCourt ||
+          bookings.some(
+            booking =>
+              booking.courtId === court.id &&
+              booking.date === formattedSelectedDate &&
+              booking.time === slotTime
+          );
+        const isDuringPlayTime = isSoldOutCourt
+          ? false
+          : isTimeInPlaySession(currentSelectedDate, slotTime, playSlotsConfig);
         const slotDateTime = new Date(`${formattedSelectedDate}T${slotTime}:00`);
         const isPast = isToday && slotDateTime <= now;
 
@@ -102,9 +107,12 @@ export function AvailabilityCalendar({
     } else {
       setTimeSlots([]);
     }
-  }, [currentSelectedDate, court.id, bookings, authIsLoading, now]);
+  }, [currentSelectedDate, court.id, bookings, authIsLoading, now, isSoldOutCourt]);
 
   const handleTimeSlotClick = async (time: string, isPlay: boolean = false) => {
+    if (isSoldOutCourt) {
+      return;
+    }
     if (!currentUser) {
       router.push('/login');
       return;
@@ -172,13 +180,22 @@ export function AvailabilityCalendar({
             />
           </div>
           <div className="flex-grow">
+            {isSoldOutCourt && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Horários esgotados</AlertTitle>
+                <AlertDescription>
+                  {court.availabilityMessage ?? 'Esta unidade está com todos os horários esgotados no momento.'}
+                </AlertDescription>
+              </Alert>
+            )}
             {currentSelectedDate ? (
               <>
                 <h3 className="text-lg font-semibold mb-3 text-center md:text-left">
                   Horários para {format(currentSelectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}:
                 </h3>
                 {authIsLoading ? (
-                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                     {availableTimeSlots.map(slot => (
                       <Button key={slot} variant="outline" disabled className="animate-pulse h-10 bg-muted"></Button>
                     ))}
@@ -192,6 +209,7 @@ export function AvailabilityCalendar({
                       let isDisabled = false;
                       let onClickAction = () => handleTimeSlotClick(slot.time, !!slot.isPlayTime);
                       let ariaLabel = `Reservar ${slot.time}`;
+                      const slotIsPast = !!slot.isPast;
 
                       // Derive play slot config and enrollment state when applicable
                       const dayOfWeek = currentSelectedDate.getDay();
@@ -208,19 +226,22 @@ export function AvailabilityCalendar({
                       if (slot.isPlayTime) {
                         buttonVariant = meInPlay ? "destructive" : "outline";
                         buttonText = cfg?.timeRange ?? slot.time;
-                        isDisabled = !meInPlay && (playFull || slot.isPast);
+                        isDisabled = !meInPlay && (playFull || slotIsPast);
                         onClickAction = () => handleTimeSlotClick(slot.time, true);
                         ariaLabel = meInPlay
                           ? `Cancelar inscrição em ${cfg?.timeRange ?? slot.time}`
-                          : slot.isPast
+                          : slotIsPast
                           ? `Horário ${cfg?.timeRange ?? slot.time} indisponível`
                           : playFull
                           ? `Horário ${cfg?.timeRange ?? slot.time} esgotado`
                           : `Inscrever-se em ${cfg?.timeRange ?? slot.time}`;
                         IconComponent = null;
-                      } else if (slot.isBooked || slot.isPast) {
+                      } else if (slot.isBooked || slotIsPast) {
                         buttonVariant = "destructive";
                         isDisabled = true;
+                        if (isSoldOutCourt && slot.isBooked) {
+                          buttonText = `${slot.time} (Esgotado)`;
+                        }
                         ariaLabel = `Horário ${slot.time} indisponível`;
                       }
                       return (
@@ -258,7 +279,10 @@ export function AvailabilityCalendar({
           </div>
         </div>
       </CardContent>
-      {currentSelectedDate && selectedTimeSlot && !isTimeInPlaySession(currentSelectedDate, selectedTimeSlot, playSlotsConfig) && (
+      {currentSelectedDate &&
+        selectedTimeSlot &&
+        !isSoldOutCourt &&
+        !isTimeInPlaySession(currentSelectedDate, selectedTimeSlot, playSlotsConfig) && (
         <BookingConfirmationDialog
           isOpen={isDialogOpen}
           onOpenChange={setIsDialogOpen}
@@ -267,7 +291,7 @@ export function AvailabilityCalendar({
           selectedTime={selectedTimeSlot}
         />
       )}
-      {currentSelectedDate && (
+      {currentSelectedDate && !isSoldOutCourt && (
         <div className="px-6 pb-6">
           <h4 className="text-md font-semibold mb-2">Inscritos por horário</h4>
           <div className="space-y-3">

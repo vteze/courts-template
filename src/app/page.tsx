@@ -56,7 +56,7 @@ export default function HomePage() {
         <section id="courts-section" className="space-y-10">
           <div className="text-center mb-10 sm:mb-12"> {/* Adjusted spacing */}
             <h2 className="text-3xl font-bold tracking-tight text-primary sm:text-4xl">
-              Nossa Quadra
+              Nossas Quadras
             </h2>
             <p className="mt-3 text-lg text-foreground/70">
               Confira os horários e garanta sua vaga.
