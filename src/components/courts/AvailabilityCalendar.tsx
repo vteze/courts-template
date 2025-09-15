@@ -78,6 +78,11 @@ export function AvailabilityCalendar({
   }, []);
 
   useEffect(() => {
+    if (court.isFullyBooked) {
+      setTimeSlots([]);
+      return;
+    }
+
     if (currentSelectedDate && !authIsLoading) {
       const formattedSelectedDate = format(currentSelectedDate, 'yyyy-MM-dd');
       const isToday = formattedSelectedDate === format(now, 'yyyy-MM-dd');
@@ -109,7 +114,40 @@ export function AvailabilityCalendar({
     } else {
       setTimeSlots([]);
     }
-  }, [currentSelectedDate, court.id, bookings, authIsLoading, now]);
+  }, [currentSelectedDate, court.id, bookings, authIsLoading, now, court.isFullyBooked]);
+
+  if (court.isFullyBooked) {
+    return (
+      <Card className={cn(className)}>
+        <CardHeader>
+          <CardTitle className="text-xl">Verificar Disponibilidade para {court.name}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Horários Esgotados</AlertTitle>
+            <AlertDescription>Todos os horários já reservados para esta quadra.</AlertDescription>
+          </Alert>
+          <p className="text-sm text-muted-foreground text-center">
+            Esta unidade está com 100% de ocupação no momento e é exibida para representar nossa atuação em Alphaville.
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+            {availableTimeSlots.map((slot) => (
+              <Button
+                key={slot}
+                variant="destructive"
+                disabled
+                className="w-full"
+                aria-label={`Horário ${slot} esgotado`}
+              >
+                {slot}
+              </Button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const handleTimeSlotClick = async (time: string, isPlay: boolean = false) => {
     if (!currentUser) {
