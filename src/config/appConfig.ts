@@ -22,24 +22,6 @@ export const availableTimeSlots: string[] = ["10:00", "17:00", "18:00", "19:00",
 // Configuração das aulas por dia com horários específicos
 export const playSlotsConfig: PlaySlotConfig[] = [
   {
-    key: "domingo-17",
-    label: "Aula",
-    dayOfWeek: 0,
-    timeRange: "17:00 - 18:00",
-  },
-  {
-    key: "domingo-18",
-    label: "Aula",
-    dayOfWeek: 0,
-    timeRange: "18:00 - 19:00",
-  },
-  {
-    key: "domingo-19",
-    label: "Aula",
-    dayOfWeek: 0,
-    timeRange: "19:00 - 20:00",
-  },
-  {
     key: "segunda-17",
     label: "Aula",
     dayOfWeek: 1,
