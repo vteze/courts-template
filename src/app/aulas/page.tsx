@@ -10,8 +10,9 @@ import { playSlotsConfig, numberOfWeeksToDisplayPlaySlots, maxParticipantsPerPla
 import type { PlaySlotConfig } from '@/lib/types';
 import { AulaSlotDisplay } from '@/components/aulas/AulaSlotDisplay';
 import { useAuth } from '@/hooks/useAuth';
-import { format, parseISO, startOfDay, addDays, getDay, nextDay as dateFnsNextDay, type Day } from 'date-fns';
+import { format, startOfDay, getDay, nextDay as dateFnsNextDay, type Day } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { parseLocalDate } from '@/lib/date';
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -114,7 +115,7 @@ function AulasPage() {
           mySlots.push({
             slotConfig: slot,
             date: signUp.date,
-            displayDate: format(parseISO(signUp.date), 'dd/MM', { locale: ptBR }),
+            displayDate: format(parseLocalDate(signUp.date), 'dd/MM', { locale: ptBR }),
             uniqueKey: `${slot.key}-${signUp.date}`,
             hasStarted: false,
           });

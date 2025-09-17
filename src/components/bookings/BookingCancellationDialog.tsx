@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from 'react';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,6 +17,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import type { Booking } from '@/lib/types';
 import { Loader2, AlertTriangle } from 'lucide-react';
+import { parseLocalDate } from '@/lib/date';
 
 interface BookingCancellationDialogProps {
   isOpen: boolean;
@@ -39,7 +40,7 @@ export function BookingCancellationDialog({
       await cancelBooking(booking.id);
       toast({
         title: "Reserva Cancelada",
-        description: `Sua reserva para ${booking.courtName} em ${format(parseISO(booking.date), "dd/MM/yyyy", { locale: ptBR })} às ${booking.time} foi cancelada com sucesso.`,
+        description: `Sua reserva para ${booking.courtName} em ${format(parseLocalDate(booking.date), "dd/MM/yyyy", { locale: ptBR })} às ${booking.time} foi cancelada com sucesso.`,
         duration: 5000,
       });
       onOpenChange(false);
@@ -71,7 +72,7 @@ export function BookingCancellationDialog({
         {/* Detalhes da reserva movidos para fora do DialogDescription */}
         <div className="mt-4 space-y-1 text-sm text-foreground bg-muted/50 p-3 rounded-md">
           <p><span className="font-medium">Quadra:</span> {booking.courtName} ({booking.courtType === 'covered' ? 'Coberta' : 'Descoberta'})</p>
-          <p><span className="font-medium">Data:</span> {format(parseISO(booking.date), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</p>
+          <p><span className="font-medium">Data:</span> {format(parseLocalDate(booking.date), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</p>
           <p><span className="font-medium">Hora:</span> {booking.time}</p>
           <p className="text-xs"><span className="font-medium">ID da Reserva:</span> {booking.id}</p>
         </div>

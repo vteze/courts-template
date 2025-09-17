@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,6 +22,7 @@ import type { Booking } from '@/lib/types';
 import { availableTimeSlots } from '@/config/appConfig';
 import { Loader2, CalendarIcon, ClockIcon, UserCircle } from 'lucide-react'; // Adicionado UserCircle
 import { cn } from '@/lib/utils';
+import { parseLocalDate } from '@/lib/date';
 
 interface EditBookingDialogProps {
   isOpen: boolean;
@@ -39,7 +40,7 @@ export function EditBookingDialog({
   const { updateBookingByAdmin, bookings: allBookings } = useAuth();
   const { toast } = useToast();
   const [isUpdating, setIsUpdating] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(parseISO(booking.date));
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(parseLocalDate(booking.date));
   const [selectedTime, setSelectedTime] = useState<string>(booking.time);
   const [onBehalfOfName, setOnBehalfOfName] = useState<string>(booking.onBehalfOf || '');
   const [availableSlotsForSelectedDate, setAvailableSlotsForSelectedDate] = useState<string[]>([]);
@@ -62,7 +63,7 @@ export function EditBookingDialog({
   useEffect(() => {
     // Reset form fields when the dialog is reopened with a different booking
     if (isOpen) {
-      setSelectedDate(parseISO(booking.date));
+      setSelectedDate(parseLocalDate(booking.date));
       setSelectedTime(booking.time);
       setOnBehalfOfName(booking.onBehalfOf || '');
     }
