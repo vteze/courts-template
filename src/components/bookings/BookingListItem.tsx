@@ -6,11 +6,12 @@ import type { Booking } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CalendarDays, Clock, ShieldCheck, Sun, Trash2, User, Edit3Icon, Users } from 'lucide-react'; // Added Users
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { BookingCancellationDialog } from './BookingCancellationDialog';
-import { EditBookingDialog } from './EditBookingDialog'; 
-import { useAuth } from '@/hooks/useAuth'; 
+import { EditBookingDialog } from './EditBookingDialog';
+import { useAuth } from '@/hooks/useAuth';
+import { parseLocalDate } from '@/lib/date';
 
 interface BookingListItemProps {
   booking: Booking;
@@ -21,7 +22,7 @@ export function BookingListItem({ booking, showUserName = false }: BookingListIt
   const { isAdmin } = useAuth(); 
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false); 
-  const bookingDate = parseISO(booking.date);
+  const bookingDate = parseLocalDate(booking.date);
 
   const handleBookingUpdated = () => {
     setIsEditDialogOpen(false);

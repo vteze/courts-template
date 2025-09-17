@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { BarChart, LineChart, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Bar, Line, ResponsiveContainer } from 'recharts';
 import { courts, playSlotsConfig } from '@/config/appConfig';
-import { format, subDays, parseISO, eachDayOfInterval, isWithinInterval, startOfDay } from 'date-fns';
+import { format, subDays, eachDayOfInterval, isWithinInterval, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Activity, BarChart3, CalendarCheck, Users, ShieldAlert, UsersRound, CalendarDays as CalendarIconLucide } from 'lucide-react'; // Renamed to avoid conflict
 import { Skeleton } from '@/components/ui/skeleton';
@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { parseLocalDate } from '@/lib/date';
 import type { PlaySignUp, User } from '@/lib/types';
 
 interface ChartData {
@@ -71,7 +72,7 @@ export default function AdminDashboardPage() {
     const end = startOfDay(endDate);
     return playSignUps.filter(ps => {
        try {
-        const signUpDate = parseISO(ps.date);
+        const signUpDate = parseLocalDate(ps.date);
         return isWithinInterval(signUpDate, { start, end });
       } catch (e) {
         console.warn(`Invalid date format for Aula sign up id ${ps.id}: ${ps.date}`);

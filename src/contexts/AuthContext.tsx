@@ -2,7 +2,7 @@
 "use client";
 
 import type { User, Booking, PlaySignUp, AuthContextType, AuthProviderProps } from '@/lib/types';
-import { parseISO, startOfWeek, endOfWeek } from 'date-fns';
+import { startOfWeek, endOfWeek } from 'date-fns';
 import { useRouter, usePathname } from 'next/navigation';
 import { createContext, useState, useEffect, useCallback } from 'react';
 import { 
@@ -33,6 +33,7 @@ import {
 } from 'firebase/firestore';
 import { useToast } from "@/hooks/use-toast";
 import { maxParticipantsPerPlaySlot } from '@/config/appConfig';
+import { parseLocalDate } from '@/lib/date';
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -497,13 +498,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
       // Limite semanal por plano
       const planLimit = currentUser.planPerWeek ?? 1;
-      const targetDate = parseISO(date);
+      const targetDate = parseLocalDate(date);
       const weekStart = startOfWeek(targetDate, { weekStartsOn: 1 });
       const weekEnd = endOfWeek(targetDate, { weekStartsOn: 1 });
       const mySignUpsThisWeek = playSignUps.filter(su => {
         if (su.userId !== currentUser.id) return false;
         if (su.isExperimental) return false;
-        const suDate = parseISO(su.date);
+        const suDate = parseLocalDate(su.date);
         return suDate >= weekStart && suDate <= weekEnd;
       }).length;
       if (mySignUpsThisWeek >= planLimit) {
